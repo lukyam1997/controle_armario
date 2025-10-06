@@ -1,164 +1,762 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hospital Storage Manager</title>
-    <style>
-        /* CSS Integrado */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f4;
-        }
-        h1, h2 {
-            color: #333;
-        }
-        #login {
-            max-width: 300px;
-            margin: 0 auto;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        input {
-            display: block;
-            width: 100%;
-            margin: 10px 0;
-            padding: 8px;
-            box-sizing: border-box;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        #content {
-            display: none;
-            margin-top: 20px;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .free { background-color: #00FF00; }
-        .occupied { background-color: #FFFF00; }
-        .orange { background-color: #FFA500; }
-        .red { background-color: #FF0000; }
-        form input {
-            margin: 5px 0;
-            width: calc(100% - 16px);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hospital Storage Manager</title>
+  <style>
+    :root {
+      --primary: #0f6fde;
+      --primary-dark: #0b4ea3;
+      --danger: #d63638;
+      --warning: #f0ad4e;
+      --success: #2ca24c;
+      --neutral-100: #f7f9fc;
+      --neutral-200: #e6ecf5;
+      --neutral-600: #4a5568;
+      --neutral-900: #1a202c;
+      --radius: 12px;
+      --shadow: 0 10px 25px rgba(31, 41, 55, 0.1);
+      --transition: 0.2s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f6fde 0%, #63a4ff 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: var(--neutral-900);
+    }
+
+    main.app {
+      width: min(1100px, 100%);
+    }
+
+    .card {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 32px;
+      box-shadow: var(--shadow);
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 35px rgba(31, 41, 55, 0.15);
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      font-weight: 600;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      color: var(--neutral-900);
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      margin-bottom: 16px;
+      color: var(--neutral-900);
+    }
+
+    form {
+      display: grid;
+      gap: 12px;
+    }
+
+    label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--neutral-600);
+    }
+
+    input, select {
+      padding: 10px 12px;
+      border: 1px solid var(--neutral-200);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(15, 111, 222, 0.15);
+    }
+
+    button {
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--transition), transform var(--transition);
+    }
+
+    button:hover:not(:disabled) {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .button--secondary {
+      background: transparent;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+
+    .button--secondary:hover:not(:disabled) {
+      background: rgba(15, 111, 222, 0.08);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    #dashboard-view {
+      display: grid;
+      gap: 24px;
+    }
+
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .user-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--neutral-100);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+    }
+
+    .section-grid {
+      display: grid;
+      gap: 24px;
+    }
+
+    @media (min-width: 900px) {
+      .section-grid--two-columns {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .table-container {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid var(--neutral-200);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+      font-size: 0.9rem;
+    }
+
+    thead {
+      background: var(--neutral-100);
+    }
+
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--neutral-200);
+    }
+
+    tbody tr:hover {
+      background: rgba(15, 111, 222, 0.06);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-badge::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .status--free {
+      color: var(--success);
+      background: rgba(44, 162, 76, 0.12);
+    }
+
+    .status--occupied {
+      color: #c79500;
+      background: rgba(240, 173, 78, 0.2);
+    }
+
+    .status--orange {
+      color: #ff7a00;
+      background: rgba(255, 122, 0, 0.16);
+    }
+
+    .status--red {
+      color: var(--danger);
+      background: rgba(214, 54, 56, 0.16);
+    }
+
+    .inline-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111827;
+      color: #fff;
+      padding: 14px 20px;
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition), transform var(--transition);
+    }
+
+    .toast--visible {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .card + .card {
+      margin-top: 24px;
+    }
+
+    .table-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px;
+      color: var(--neutral-600);
+    }
+  </style>
 </head>
 <body>
-    <!-- HTML Estrutura -->
-    <div id="login">
-        <h1>Login Hospital Storage</h1>
-        <input id="username" placeholder="Usuário" type="text">
-        <input id="password" placeholder="Senha" type="password">
-        <button onclick="handleLogin()">Entrar</button>
-    </div>
-    <div id="content">
-        <!-- Conteúdo dinâmico será carregado aqui -->
-    </div>
+  <main class="app">
+    <section id="login-view" class="card">
+      <h1>Hospital Storage Manager</h1>
+      <p>Controle inteligente de armários para visitantes e acompanhantes.</p>
+      <form id="login-form">
+        <div>
+          <label for="username">Usuário</label>
+          <input id="username" name="username" type="text" autocomplete="username" required>
+        </div>
+        <div>
+          <label for="password">Senha</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" id="login-button">Entrar</button>
+      </form>
+    </section>
 
-    <script>
-        // JavaScript Integrado
-        // Simulando perfis (em um app real, isso viria do backend)
-        const PROFILES = {
-            VISITOR: 'armario_visitante',
-            COMPANION: 'guarda_volume',
-            ADMIN: 'admin'
-        };
+    <section id="dashboard-view" class="hidden">
+      <div class="card">
+        <div class="dashboard-header">
+          <div>
+            <h1>Painel de Armários</h1>
+            <p id="welcome-text">&nbsp;</p>
+          </div>
+          <div class="user-chip">
+            <span id="user-profile"></span>
+            <span id="user-name"></span>
+            <button type="button" class="button--secondary" id="logout-button">Sair</button>
+          </div>
+        </div>
+      </div>
+      <div id="dashboard-content" class="section-grid"></div>
+    </section>
+  </main>
 
-        // Função de login simulada (em produção, use o google.script.run)
-        function handleLogin() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            // Simulação: Verifique credenciais (substitua por chamada real ao Apps Script)
-            if (username === 'admin' && password === 'senha123') {
-                document.getElementById('login').style.display = 'none';
-                document.getElementById('content').style.display = 'block';
-                loadDashboard(PROFILES.ADMIN); // Exemplo com admin
-            } else if (username === 'visitante' && password === '123') {
-                loadDashboard(PROFILES.VISITOR);
-            } else {
-                alert('Login inválido!');
-                return;
-            }
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const PROFILES = Object.freeze({
+      VISITOR: 'armario_visitante',
+      COMPANION: 'guarda_volume',
+      ADMIN: 'admin'
+    });
+
+    const statusClasses = {
+      Free: 'status--free',
+      Occupied: 'status--occupied',
+      Orange: 'status--orange',
+      Red: 'status--red'
+    };
+
+    const state = {
+      profile: null,
+      username: null
+    };
+
+    const loginForm = document.getElementById('login-form');
+    const loginView = document.getElementById('login-view');
+    const dashboardView = document.getElementById('dashboard-view');
+    const dashboardContent = document.getElementById('dashboard-content');
+    const toast = document.getElementById('toast');
+    const loginButton = document.getElementById('login-button');
+    const userProfileLabel = document.getElementById('user-profile');
+    const userNameLabel = document.getElementById('user-name');
+    const welcomeText = document.getElementById('welcome-text');
+    const logoutButton = document.getElementById('logout-button');
+
+    loginForm.addEventListener('submit', handleLogin);
+    logoutButton.addEventListener('click', handleLogout);
+
+    function handleLogin(event) {
+      event.preventDefault();
+      const formData = new FormData(loginForm);
+      const username = formData.get('username');
+      const password = formData.get('password');
+
+      toggleLoading(loginButton, true, 'Entrando...');
+
+      google.script.run
+        .withSuccessHandler(handleLoginResponse)
+        .withFailureHandler(error => {
+          toggleLoading(loginButton, false, 'Entrar');
+          handleError(error);
+        })
+        .login(username, password);
+    }
+
+    function handleLoginResponse(response) {
+      toggleLoading(loginButton, false, 'Entrar');
+
+      if (!response || !response.success) {
+        showToast('Credenciais inválidas. Tente novamente.', true);
+        return;
+      }
+
+      state.profile = response.profile;
+      state.username = response.username;
+      renderDashboard();
+      loginView.classList.add('hidden');
+      dashboardView.classList.remove('hidden');
+    }
+
+    function handleLogout() {
+      state.profile = null;
+      state.username = null;
+      dashboardContent.innerHTML = '';
+      loginView.classList.remove('hidden');
+      dashboardView.classList.add('hidden');
+      loginForm.reset();
+    }
+
+    function renderDashboard() {
+      const profileLabel = getProfileLabel(state.profile);
+      userProfileLabel.textContent = profileLabel;
+      userNameLabel.textContent = state.username || '';
+      welcomeText.textContent = `Bem-vindo, ${state.username || 'usuário'}!`;
+
+      dashboardContent.innerHTML = '';
+
+      switch (state.profile) {
+        case PROFILES.VISITOR:
+          renderVisitorDashboard();
+          break;
+        case PROFILES.COMPANION:
+          renderCompanionDashboard();
+          break;
+        case PROFILES.ADMIN:
+          renderAdminDashboard();
+          break;
+        default:
+          renderVisitorDashboard();
+          break;
+      }
+    }
+
+    function renderVisitorDashboard() {
+      dashboardContent.classList.remove('section-grid--two-columns');
+      dashboardContent.innerHTML = `
+        <section class="card">
+          <h2>Registrar Visitante</h2>
+          <form id="visitor-form" autocomplete="off">
+            <div>
+              <label for="visitor-patient">Paciente</label>
+              <input id="visitor-patient" name="patient" required>
+            </div>
+            <div>
+              <label for="visitor-bed">Leito</label>
+              <input id="visitor-bed" name="bed" required>
+            </div>
+            <div>
+              <label for="visitor-name">Visitante</label>
+              <input id="visitor-name" name="visitor" required>
+            </div>
+            <div>
+              <label for="visitor-phone">Telefone</label>
+              <input id="visitor-phone" name="phone" placeholder="(11) 99999-9999">
+            </div>
+            <button type="submit" id="visitor-submit">Registrar</button>
+          </form>
+        </section>
+        <section class="card">
+          <div class="table-actions">
+            <button type="button" class="button--secondary" data-refresh="visitor">Atualizar</button>
+          </div>
+          <div class="table-container">
+            <table id="visitor-lockers"></table>
+          </div>
+        </section>
+      `;
+
+      document.getElementById('visitor-form').addEventListener('submit', event => {
+        event.preventDefault();
+        handleRegistration({
+          type: 'visitor',
+          unit: '',
+          form: event.currentTarget,
+          submitButton: document.getElementById('visitor-submit')
+        });
+      });
+
+      dashboardContent.querySelector('[data-refresh="visitor"]').addEventListener('click', () => {
+        loadLockers('visitor', '', document.getElementById('visitor-lockers'));
+      });
+
+      loadLockers('visitor', '', document.getElementById('visitor-lockers'));
+    }
+
+    function renderCompanionDashboard() {
+      dashboardContent.classList.add('section-grid--two-columns');
+      dashboardContent.innerHTML = `
+        <section class="card">
+          <h2>Registrar Acompanhante</h2>
+          <form id="companion-form" autocomplete="off">
+            <div>
+              <label for="companion-unit">Unidade</label>
+              <select id="companion-unit" name="unit" required>
+                <option value="NAC">NAC</option>
+                <option value="UIB">UIB</option>
+              </select>
+            </div>
+            <div>
+              <label for="companion-patient">Paciente</label>
+              <input id="companion-patient" name="patient" required>
+            </div>
+            <div>
+              <label for="companion-bed">Leito</label>
+              <input id="companion-bed" name="bed" required>
+            </div>
+            <div>
+              <label for="companion-name">Visitante/Acompanhante</label>
+              <input id="companion-name" name="visitor" required>
+            </div>
+            <div>
+              <label for="companion-phone">Telefone</label>
+              <input id="companion-phone" name="phone" placeholder="(11) 99999-9999">
+            </div>
+            <button type="submit" id="companion-submit">Registrar</button>
+          </form>
+        </section>
+        <section class="card">
+          <div class="table-actions">
+            <button type="button" class="button--secondary" data-refresh="NAC">Atualizar NAC</button>
+            <button type="button" class="button--secondary" data-refresh="UIB">Atualizar UIB</button>
+          </div>
+          <div class="section-grid">
+            <div>
+              <h3>Armários NAC</h3>
+              <div class="table-container">
+                <table id="lockers-nac"></table>
+              </div>
+            </div>
+            <div>
+              <h3>Armários UIB</h3>
+              <div class="table-container">
+                <table id="lockers-uib"></table>
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+
+      document.getElementById('companion-form').addEventListener('submit', event => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        handleRegistration({
+          type: 'companion',
+          unit: form.unit.value,
+          form,
+          submitButton: document.getElementById('companion-submit')
+        });
+      });
+
+      dashboardContent.querySelectorAll('[data-refresh]').forEach(button => {
+        button.addEventListener('click', () => {
+          const unit = button.getAttribute('data-refresh');
+          const targetId = unit === 'NAC' ? 'lockers-nac' : 'lockers-uib';
+          loadLockers('companion', unit, document.getElementById(targetId));
+        });
+      });
+
+      loadLockers('companion', 'NAC', document.getElementById('lockers-nac'));
+      loadLockers('companion', 'UIB', document.getElementById('lockers-uib'));
+    }
+
+    function renderAdminDashboard() {
+      dashboardContent.classList.remove('section-grid--two-columns');
+      dashboardContent.innerHTML = `
+        <section class="card">
+          <h2>Bem-vindo, administrador!</h2>
+          <p>Utilize a planilha para gerenciar usuários, armários e configurações avançadas.</p>
+          <p>Este painel web pode ser expandido com cadastros e relatórios específicos conforme necessário.</p>
+        </section>
+      `;
+    }
+
+    function handleRegistration({ type, unit, form, submitButton }) {
+      const formData = new FormData(form);
+      const payload = {
+        patientName: formData.get('patient'),
+        bed: formData.get('bed'),
+        visitorName: formData.get('visitor'),
+        phone: (formData.get('phone') || '').trim(),
+        type,
+        unit: unit || ''
+      };
+
+      toggleLoading(submitButton, true, 'Registrando...');
+
+      google.script.run
+        .withSuccessHandler(lockerNumber => {
+          toggleLoading(submitButton, false, 'Registrar');
+          if (!lockerNumber) {
+            showToast('Não foi possível atribuir um armário.', true);
+            return;
+          }
+          showToast(`Armário ${lockerNumber} atribuído com sucesso!`);
+          form.reset();
+          refreshTables(type, unit);
+        })
+        .withFailureHandler(error => {
+          toggleLoading(submitButton, false, 'Registrar');
+          handleError(error);
+        })
+        .registerVisitor(payload.patientName, payload.bed, payload.visitorName, payload.phone, type, payload.unit);
+    }
+
+    function refreshTables(type, unit) {
+      if (type === 'visitor') {
+        loadLockers('visitor', '', document.getElementById('visitor-lockers'));
+      } else {
+        if (!unit || unit === 'NAC') {
+          loadLockers('companion', 'NAC', document.getElementById('lockers-nac'));
         }
-
-        // Carregar dashboard baseado no perfil
-        function loadDashboard(profile) {
-            let html = '';
-            if (profile === PROFILES.VISITOR) {
-                html = `
-                    <h2>Painel Armários Visitantes</h2>
-                    <table id="lockersTable">
-                        <tr><th>Número</th><th>Status</th><th>Nome</th><th>Telefone</th><th>Paciente</th><th>Leito</th><th>Início</th></tr>
-                    </table>
-                    <form id="registerForm">
-                        <input placeholder="Nome Paciente" id="patientName">
-                        <input placeholder="Leito" id="bed">
-                        <input placeholder="Nome Visitante" id="visitorName">
-                        <input placeholder="Telefone" id="phone">
-                        <button type="button" onclick="register()">Registrar</button>
-                    </form>
-                `;
-                document.getElementById('content').innerHTML = html;
-                // Simular dados de armários (em real, chame google.script.run.getLockersData)
-                const sampleData = [
-                    [1, 'Free', '', '', '', '', ''],
-                    [2, 'Occupied', 'João', '1199999999', 'Maria', '101', '2023-10-03 10:00'],
-                    [3, 'Orange', 'Ana', '1188888888', 'Pedro', '102', '2023-10-03 09:00']
-                ];
-                const table = document.getElementById('lockersTable');
-                sampleData.forEach(row => {
-                    const tr = document.createElement('tr');
-                    tr.className = row[1].toLowerCase();
-                    row.forEach(cell => {
-                        const td = document.createElement('td');
-                        td.textContent = cell;
-                        tr.appendChild(td);
-                    });
-                    table.appendChild(tr);
-                });
-            } else if (profile === PROFILES.ADMIN) {
-                html = '<h2>Dashboard Admin</h2><p>Gerencie usuários, etc.</p>';
-                document.getElementById('content').innerHTML = html;
-                // Adicione mais funcionalidades aqui
-            }
-            // Adicione para outros perfis
+        if (!unit || unit === 'UIB') {
+          loadLockers('companion', 'UIB', document.getElementById('lockers-uib'));
         }
+      }
+    }
 
-        // Função de registro simulada
-        function register() {
-            const patientName = document.getElementById('patientName').value;
-            const bed = document.getElementById('bed').value;
-            const visitorName = document.getElementById('visitorName').value;
-            const phone = document.getElementById('phone').value;
-            // Em real, chame google.script.run.registerVisitor
-            alert(`Registrado! Armário atribuído: 4 (simulação)\nDados: ${patientName}, ${bed}, ${visitorName}, ${phone}`);
-            // Atualize a tabela dinamicamente
+    function loadLockers(type, unit, tableElement) {
+      if (!tableElement) return;
+      tableElement.innerHTML = '<tbody><tr><td>Carregando...</td></tr></tbody>';
+
+      google.script.run
+        .withSuccessHandler(data => {
+          renderLockersTable(tableElement, data, { type, unit });
+        })
+        .withFailureHandler(error => {
+          tableElement.innerHTML = '<tbody><tr><td class="empty-state">Erro ao carregar dados.</td></tr></tbody>';
+          handleError(error);
+        })
+        .getLockersData(type, unit || '');
+    }
+
+    function renderLockersTable(tableElement, data, context = {}) {
+      const { type, unit } = context;
+      if (!data || data.length <= 1) {
+        tableElement.innerHTML = '<tbody><tr><td class="empty-state">Nenhum armário cadastrado.</td></tr></tbody>';
+        return;
+      }
+
+      const displayedColumns = [
+        { index: 0, label: 'Armário' },
+        { index: 1, label: 'Status' },
+        { index: 2, label: 'Visitante' },
+        { index: 3, label: 'Telefone' },
+        { index: 4, label: 'Paciente' },
+        { index: 5, label: 'Leito' },
+        { index: 6, label: 'Início' },
+        { index: 9, label: 'Fim Previsto' }
+      ];
+
+      const tbody = document.createElement('tbody');
+      data.slice(1).forEach(row => {
+        const tr = document.createElement('tr');
+        const status = row[1];
+        displayedColumns.forEach(column => {
+          const td = document.createElement('td');
+          let value = row[column.index];
+          if (column.index === 6 || column.index === 9) {
+            value = formatDate(value);
+          }
+          if (column.index === 1) {
+            const badge = document.createElement('span');
+            badge.className = 'status-badge ' + (statusClasses[status] || '');
+            badge.textContent = status || '—';
+            td.appendChild(badge);
+          } else {
+            td.textContent = value || '—';
+          }
+          tr.appendChild(td);
+        });
+
+        const actionCell = document.createElement('td');
+        actionCell.className = 'inline-actions';
+        if (status && status !== 'Free') {
+          const checkoutButton = document.createElement('button');
+          checkoutButton.type = 'button';
+          checkoutButton.textContent = 'Liberar';
+          checkoutButton.classList.add('button--secondary');
+          checkoutButton.addEventListener('click', () => {
+            handleCheckout(type, unit, row[0]);
+          });
+          actionCell.appendChild(checkoutButton);
         }
-    </script>
+        tr.appendChild(actionCell);
+        tbody.appendChild(tr);
+      });
+
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      displayedColumns.forEach(column => {
+        const th = document.createElement('th');
+        th.textContent = column.label;
+        headerRow.appendChild(th);
+      });
+      const actionHeader = document.createElement('th');
+      actionHeader.textContent = 'Ações';
+      headerRow.appendChild(actionHeader);
+      thead.appendChild(headerRow);
+
+      tableElement.innerHTML = '';
+      tableElement.appendChild(thead);
+      tableElement.appendChild(tbody);
+    }
+
+    function handleCheckout(type, unit, lockerNumber) {
+      if (!lockerNumber) {
+        return;
+      }
+      const confirmed = confirm(`Confirmar liberação do armário ${lockerNumber}?`);
+      if (!confirmed) {
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(result => {
+          if (result) {
+            showToast(`Armário ${lockerNumber} liberado.`);
+            refreshTables(type, unit);
+          } else {
+            showToast('Não foi possível liberar o armário.', true);
+          }
+        })
+        .withFailureHandler(handleError)
+        .checkoutLocker(lockerNumber, type, unit || '');
+    }
+
+    function toggleLoading(button, isLoading, text) {
+      if (!button) return;
+      button.disabled = isLoading;
+      if (text) {
+        button.textContent = text;
+      }
+    }
+
+    function showToast(message, isError = false) {
+      if (!toast) return;
+      toast.textContent = message;
+      toast.style.background = isError ? varColor('--danger') : '#111827';
+      toast.classList.add('toast--visible');
+      setTimeout(() => toast.classList.remove('toast--visible'), 3000);
+    }
+
+    function varColor(variable) {
+      const value = getComputedStyle(document.documentElement).getPropertyValue(variable);
+      return value ? value.trim() : '#111827';
+    }
+
+    function handleError(error) {
+      console.error(error);
+      showToast('Ocorreu um erro. Verifique as permissões e tente novamente.', true);
+    }
+
+    function formatDate(value) {
+      if (!value) {
+        return '—';
+      }
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) {
+        return String(value);
+      }
+      return date.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function getProfileLabel(profile) {
+      switch (profile) {
+        case PROFILES.VISITOR:
+          return 'Recepção Visitantes';
+        case PROFILES.COMPANION:
+          return 'Guarda-volumes';
+        case PROFILES.ADMIN:
+          return 'Administrador';
+        default:
+          return 'Usuário';
+      }
+    }
+  </script>
 </body>
 </html>
