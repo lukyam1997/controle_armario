@@ -1,164 +1,468 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hospital Storage Manager</title>
-    <style>
-        /* CSS Integrado */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f4;
-        }
-        h1, h2 {
-            color: #333;
-        }
-        #login {
-            max-width: 300px;
-            margin: 0 auto;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        input {
-            display: block;
-            width: 100%;
-            margin: 10px 0;
-            padding: 8px;
-            box-sizing: border-box;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        #content {
-            display: none;
-            margin-top: 20px;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .free { background-color: #00FF00; }
-        .occupied { background-color: #FFFF00; }
-        .orange { background-color: #FFA500; }
-        .red { background-color: #FF0000; }
-        form input {
-            margin: 5px 0;
-            width: calc(100% - 16px);
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hospital Storage Manager</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary:#0d6efd; --primary-dark:#0a58ca;
+      --danger:#dc3545; --success:#198754; --warning:#ffc107; --orange:#fd7e14;
+      --background:#f1f3f5; --text:#212529; --muted:#6c757d;
+    }
+    *{box-sizing:border-box} body{margin:0;font-family:'Segoe UI',sans-serif;background:var(--background);color:var(--text)}
+    .app{display:flex;height:100vh;overflow:hidden}
+    .sidebar{width:240px;background:#212529;color:#fff;display:flex;flex-direction:column;padding:20px}
+    .sidebar h2{margin:0 0 20px;font-size:1.2rem;color:#f8f9fa}
+    .sidebar ul{list-style:none;padding:0;margin:0;flex:1}
+    .sidebar li{padding:12px 14px;margin-bottom:8px;border-radius:6px;cursor:pointer;transition:background .2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sidebar li:hover{background:#343a40}
+    .sidebar .logout{border-top:1px solid #343a40;margin-top:auto;padding-top:12px;cursor:pointer;font-weight:bold;color:#ffc107}
+    .main{flex:1;overflow-y:auto;padding:24px}
+    header{background:#fff;padding:16px 24px;border-bottom:1px solid #dee2e6;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between}
+    .card{background:#fff;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.08);padding:20px;margin-bottom:24px;transition:transform .2s;overflow:hidden}
+    .card:hover{transform:translateY(-2px)}
+    .card h2{margin:0 0 16px;font-size:1.1rem;font-weight:600}
+    .stats-overview{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px}
+    .stat-card{background:#fff;border-radius:10px;box-shadow:0 2px 4px rgba(0,0,0,.08);padding:14px;text-align:center;font-size:.9rem;font-weight:600;white-space:nowrap}
+    .stat-card span{display:block;font-size:1.4rem;margin-top:6px;font-weight:bold}
+    .stat-card.free{border-left:5px solid var(--success)}
+    .stat-card.occupied{border-left:5px solid var(--warning)}
+    .stat-card.orange{border-left:5px solid var(--orange)}
+    .stat-card.red{border-left:5px solid var(--danger)}
+    .chart-container{max-width:600px;margin:0 auto}
+    .lockers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:14px;margin-top:20px}
+    .locker{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:10px;font-weight:bold;font-size:.9rem;cursor:pointer;position:relative;transition:transform .2s,box-shadow .2s}
+    .locker:hover{transform:scale(1.08);box-shadow:0 6px 14px rgba(0,0,0,.2)}
+    .locker span{position:absolute;bottom:6px;right:8px;font-size:.75rem;opacity:.7}
+    .locker.status-Free{background:#d1e7dd;color:#0f5132}
+    .locker.status-Free::before{content:"🔓";font-size:1.4rem}
+    .locker.status-Occupied{background:#fff3cd;color:#664d03}
+    .locker.status-Occupied::before{content:"🔒";font-size:1.4rem}
+    .locker.status-Orange{background:#ffe5d0;color:#bd5d38}
+    .locker.status-Orange::before{content:"⏳";font-size:1.4rem}
+    .locker.status-Red{background:#f8d7da;color:#842029}
+    .locker.status-Red::before{content:"❌";font-size:1.4rem}
+    .legend{display:flex;gap:20px;justify-content:center;margin-top:20px;font-size:.85rem;color:var(--muted)}
+    .legend div{display:flex;align-items:center;gap:6px}
+    .message{padding:10px;margin:10px 0;border-radius:6px;font-weight:600;text-align:center}
+    .message.success{background:#d1e7dd;color:#0f5132}
+    .message.error{background:#f8d7da;color:#842029}
+    .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:.3s;z-index:1000}
+    .modal.active{opacity:1;pointer-events:auto}
+    .modal-content{background:#fff;padding:20px;border-radius:10px;width:90%;max-width:420px;position:relative}
+    .modal-content h2{margin-top:0}
+    .modal-close{position:absolute;top:10px;right:10px;cursor:pointer;font-size:1.2rem;color:var(--muted)}
+    input,select,button{width:100%;padding:10px;margin-bottom:12px;border-radius:6px;border:1px solid #ced4da;font-size:.95rem}
+    button{background:var(--primary);color:#fff;font-weight:bold;cursor:pointer;transition:background .2s}
+    button:hover{background:var(--primary-dark)}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px 10px;border-bottom:1px solid #dee2e6;font-size:.9rem;text-align:left}
+    th{background:#f8f9fa}
+    @media(max-width:768px){.sidebar{width:200px}.locker{font-size:.85rem}.stat-card span{font-size:1.2rem}}
+  </style>
 </head>
 <body>
-    <!-- HTML Estrutura -->
-    <div id="login">
-        <h1>Login Hospital Storage</h1>
-        <input id="username" placeholder="Usuário" type="text">
-        <input id="password" placeholder="Senha" type="password">
-        <button onclick="handleLogin()">Entrar</button>
+  <!-- LOGIN -->
+  <div id="loginPage" class="main">
+    <div class="card" style="max-width:360px;margin:80px auto;">
+      <h2>Acessar sistema</h2>
+      <form id="loginForm" onsubmit="submitLogin(event)">
+        <label>Usuário</label>
+        <input id="username" required />
+        <label>Senha</label>
+        <input type="password" id="password" required />
+        <button type="submit">Entrar</button>
+      </form>
+      <div id="loginError" class="message error" style="display:none;"></div>
     </div>
-    <div id="content">
-        <!-- Conteúdo dinâmico será carregado aqui -->
+  </div>
+
+  <!-- APP -->
+  <div id="app" class="app" style="display:none;">
+    <aside class="sidebar">
+      <h2>Menu</h2>
+      <ul>
+        <li onclick="loadDashboard('visitor')">👥 Armários Visitantes</li>
+        <li onclick="loadDashboard('companion','NAC')">🏥 Armários NAC</li>
+        <li onclick="loadDashboard('companion','UIB')">🏥 Armários UIB</li>
+        <li onclick="showLockerSettings()">⚙️ Configurar Armários</li>
+        <li onclick="showUsers()">👤 Usuários</li>
+        <li onclick="showReports()">📊 Relatórios</li>
+        <li onclick="showAudit()">📝 Auditoria</li>
+      </ul>
+      <div class="logout" onclick="handleLogout()">Sair</div>
+    </aside>
+    <main class="main" id="mainContent"></main>
+  </div>
+
+  <!-- MODAL -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeModal()">&times;</span>
+      <div id="modalBody"></div>
     </div>
+  </div>
 
-    <script>
-        // JavaScript Integrado
-        // Simulando perfis (em um app real, isso viria do backend)
-        const PROFILES = {
-            VISITOR: 'armario_visitante',
-            COMPANION: 'guarda_volume',
-            ADMIN: 'admin'
-        };
+<script>
+/** ========= STATE ========= **/
+const state = {
+  user: null,
+  view: 'visitor',
+  unit: '',
+  chart: null,
+};
 
-        // Função de login simulada (em produção, use o google.script.run)
-        function handleLogin() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            // Simulação: Verifique credenciais (substitua por chamada real ao Apps Script)
-            if (username === 'admin' && password === 'senha123') {
-                document.getElementById('login').style.display = 'none';
-                document.getElementById('content').style.display = 'block';
-                loadDashboard(PROFILES.ADMIN); // Exemplo com admin
-            } else if (username === 'visitante' && password === '123') {
-                loadDashboard(PROFILES.VISITOR);
-            } else {
-                alert('Login inválido!');
-                return;
-            }
+/** ========= AUTH ========= **/
+function submitLogin(e){
+  e.preventDefault();
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  document.getElementById('loginError').style.display = 'none';
+
+  google.script.run
+    .withSuccessHandler(res=>{
+      if (res && res.success) {
+        state.user = res;
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        loadDashboard('visitor');
+      } else {
+        showError('loginError', (res && res.message) || 'Falha ao autenticar.');
+      }
+    })
+    .withFailureHandler(err=>{
+      showError('loginError', 'Erro de comunicação: '+err.message);
+    })
+    .login(username, password);
+}
+function handleLogout(){
+  state.user = null;
+  // reset simples
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'block';
+  document.getElementById('loginForm').reset();
+}
+
+/** ========= UI HELPERS ========= **/
+function showError(elId, msg){
+  const el = document.getElementById(elId);
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function openModal(html){
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modal').classList.add('active');
+}
+function closeModal(){
+  document.getElementById('modal').classList.remove('active');
+  document.getElementById('modalBody').innerHTML = '';
+}
+
+/** ========= DASHBOARD ========= **/
+function loadDashboard(type, unit=''){
+  state.view = type; state.unit = unit;
+  const content = document.getElementById('mainContent');
+  content.innerHTML = '<div class="card"><h2>Carregando...</h2></div>';
+
+  google.script.run.withSuccessHandler(cfg=>{
+    const title = type==='visitor' ? 'Visitantes' : `Acompanhantes - ${unit}`;
+    content.innerHTML = `
+      <div class="card">
+        <h2>Planta - ${title}</h2>
+        <div class="stats-overview">
+          <div class="stat-card free">🟢 Livres <span id="statFree">0</span></div>
+          <div class="stat-card occupied">🟡 Ocupados <span id="statOccupied">0</span></div>
+          <div class="stat-card orange">🟠 Orange <span id="statOrange">0</span></div>
+          <div class="stat-card red">🔴 Red <span id="statRed">0</span></div>
+        </div>
+        <div class="chart-container"><canvas id="chart"></canvas></div>
+        <div class="lockers-grid" id="grid"></div>
+        <div class="legend">
+          <div>🔓 Livre</div><div>🔒 Ocupado</div><div>⏳ Orange</div><div>❌ Red</div>
+        </div>
+      </div>`;
+    renderLockers(type, unit);
+    loadStats(type, unit, cfg);
+  }).getLockerConfig(type, unit);
+}
+
+function renderLockers(type, unit){
+  google.script.run.withSuccessHandler(rows=>{
+    const grid = document.getElementById('grid');
+    const headers = rows[0];
+    const idx = {
+      number: headers.indexOf('Number'),
+      status: headers.indexOf('Status'),
+      visitor: headers.indexOf('Visitor Name'),
+      phone: headers.indexOf('Phone'),
+      patient: headers.indexOf('Patient Name'),
+      bed: headers.indexOf('Bed'),
+      start: headers.indexOf('Start Time'),
+      end: headers.indexOf('End Time'),
+    };
+    grid.innerHTML = '';
+    rows.slice(1).forEach(r=>{
+      const num = r[idx.number];
+      const status = r[idx.status] || 'Free';
+      const div = document.createElement('div');
+      div.className = `locker status-${status}`;
+      div.title = num;
+      div.innerHTML = `${num}<span>${status}</span>`;
+      div.onclick = ()=>{
+        if (status === 'Free') {
+          openModal(getRegisterFormHTML(num, type, unit));
+        } else {
+          openModal(getOccupancyHTML(num, r[idx.visitor], r[idx.phone], r[idx.patient], r[idx.bed], r[idx.start], type, unit));
         }
+      };
+      grid.appendChild(div);
+    });
+  }).getLockersData(type, unit);
+}
 
-        // Carregar dashboard baseado no perfil
-        function loadDashboard(profile) {
-            let html = '';
-            if (profile === PROFILES.VISITOR) {
-                html = `
-                    <h2>Painel Armários Visitantes</h2>
-                    <table id="lockersTable">
-                        <tr><th>Número</th><th>Status</th><th>Nome</th><th>Telefone</th><th>Paciente</th><th>Leito</th><th>Início</th></tr>
-                    </table>
-                    <form id="registerForm">
-                        <input placeholder="Nome Paciente" id="patientName">
-                        <input placeholder="Leito" id="bed">
-                        <input placeholder="Nome Visitante" id="visitorName">
-                        <input placeholder="Telefone" id="phone">
-                        <button type="button" onclick="register()">Registrar</button>
-                    </form>
-                `;
-                document.getElementById('content').innerHTML = html;
-                // Simular dados de armários (em real, chame google.script.run.getLockersData)
-                const sampleData = [
-                    [1, 'Free', '', '', '', '', ''],
-                    [2, 'Occupied', 'João', '1199999999', 'Maria', '101', '2023-10-03 10:00'],
-                    [3, 'Orange', 'Ana', '1188888888', 'Pedro', '102', '2023-10-03 09:00']
-                ];
-                const table = document.getElementById('lockersTable');
-                sampleData.forEach(row => {
-                    const tr = document.createElement('tr');
-                    tr.className = row[1].toLowerCase();
-                    row.forEach(cell => {
-                        const td = document.createElement('td');
-                        td.textContent = cell;
-                        tr.appendChild(td);
-                    });
-                    table.appendChild(tr);
-                });
-            } else if (profile === PROFILES.ADMIN) {
-                html = '<h2>Dashboard Admin</h2><p>Gerencie usuários, etc.</p>';
-                document.getElementById('content').innerHTML = html;
-                // Adicione mais funcionalidades aqui
-            }
-            // Adicione para outros perfis
-        }
+function loadStats(type, unit, cfg){
+  google.script.run.withSuccessHandler(s=>{
+    document.getElementById('statFree').innerText = s.free;
+    document.getElementById('statOccupied').innerText = s.occupied;
+    document.getElementById('statOrange').innerText = s.orange;
+    document.getElementById('statRed').innerText = s.red;
+    drawChart([s.free, s.occupied, s.orange, s.red]);
+  }).getLockerStats(type, unit);
+}
 
-        // Função de registro simulada
-        function register() {
-            const patientName = document.getElementById('patientName').value;
-            const bed = document.getElementById('bed').value;
-            const visitorName = document.getElementById('visitorName').value;
-            const phone = document.getElementById('phone').value;
-            // Em real, chame google.script.run.registerVisitor
-            alert(`Registrado! Armário atribuído: 4 (simulação)\nDados: ${patientName}, ${bed}, ${visitorName}, ${phone}`);
-            // Atualize a tabela dinamicamente
-        }
-    </script>
+function drawChart(data){
+  const ctx = document.getElementById('chart').getContext('2d');
+  if (state.chart) state.chart.destroy();
+  state.chart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Livres','Ocupados','Orange','Red'],
+      datasets: [{ data }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom' } }
+    }
+  });
+}
+
+/** ========= MODAL CONTENT ========= **/
+function getRegisterFormHTML(lockerNum, type, unit){
+  return `
+    <h2>Registrar – Armário ${lockerNum}</h2>
+    <label>Nome do Visitante</label>
+    <input id="r_visitor" />
+    <label>Telefone</label>
+    <input id="r_phone" />
+    <label>Paciente</label>
+    <input id="r_patient" />
+    <label>Leito</label>
+    <input id="r_bed" />
+    <button onclick="submitRegister('${lockerNum}','${type}','${unit||''}')">Confirmar</button>
+  `;
+}
+function submitRegister(lockerNum, type, unit){
+  const v = document.getElementById('r_visitor').value.trim();
+  const p = document.getElementById('r_phone').value.trim();
+  const pa = document.getElementById('r_patient').value.trim();
+  const b = document.getElementById('r_bed').value.trim();
+  if (!v || !p || !pa || !b) { alert('Preencha todos os campos.'); return; }
+
+  google.script.run.withSuccessHandler(res=>{
+    if (res && res.success) {
+      closeModal();
+      loadDashboard(state.view, state.unit);
+    } else {
+      alert((res && res.message) || 'Falha ao registrar.');
+    }
+  }).registerVisitor(pa, b, v, p, type, unit, lockerNum);
+}
+
+function getOccupancyHTML(lockerNum, visitor, phone, patient, bed, start, type, unit){
+  const started = start ? new Date(start).toLocaleString() : '-';
+  return `
+    <h2>Armário ${lockerNum}</h2>
+    <p><b>Visitante:</b> ${visitor || '-'}</p>
+    <p><b>Telefone:</b> ${phone || '-'}</p>
+    <p><b>Paciente:</b> ${patient || '-'}</p>
+    <p><b>Leito:</b> ${bed || '-'}</p>
+    <p><b>Início:</b> ${started}</p>
+    <button style="background:#dc3545" onclick="confirmCheckout('${lockerNum}','${type}','${unit||''}')">Finalizar (Checkout)</button>
+  `;
+}
+function confirmCheckout(lockerNum, type, unit){
+  if (!confirm(`Confirmar checkout do armário ${lockerNum}?`)) return;
+  google.script.run.withSuccessHandler(res=>{
+    if (res && res.success) {
+      closeModal();
+      loadDashboard(state.view, state.unit);
+    } else {
+      alert((res && res.message) || 'Falha no checkout.');
+    }
+  }).checkoutLocker(lockerNum, type, unit);
+}
+
+/** ========= CONFIGURAR ARMÁRIOS ========= **/
+function showLockerSettings(){
+  const content = document.getElementById('mainContent');
+  content.innerHTML = `
+    <div class="card">
+      <h2>Configurar Armários</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">
+        ${['visitor','nac','uib'].map(t => `
+          <div class="card" style="margin:0">
+            <h3 style="margin-top:0">${t==='visitor'?'Visitantes':(t==='nac'?'NAC':'UIB')}</h3>
+            <div id="cfg-${t}">Carregando...</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  ['visitor','nac','uib'].forEach(t=>{
+    const unit = t==='nac'?'NAC':(t==='uib'?'UIB':'');
+    google.script.run.withSuccessHandler(cfg=>{
+      document.getElementById(`cfg-${t}`).innerHTML = `
+        <label>Linhas</label><input id="rows-${t}" type="number" min="1" value="${cfg.rows}">
+        <label>Colunas</label><input id="cols-${t}" type="number" min="1" value="${cfg.cols}">
+        <button onclick="saveLockerCfg('${t}')">Salvar</button>
+        <p style="color:var(--muted);margin:6px 0 0">Total: ${cfg.rows*cfg.cols}</p>
+      `;
+    }).getLockerConfig(t==='visitor'?'visitor':'companion', unit);
+  });
+}
+function saveLockerCfg(t){
+  const rows = Number(document.getElementById(`rows-${t}`).value);
+  const cols = Number(document.getElementById(`cols-${t}`).value);
+  google.script.run.withSuccessHandler(res=>{
+    if (res && res.success) {
+      alert('Configuração salva!');
+      if (t==='visitor') loadDashboard('visitor'); else loadDashboard('companion', t==='nac'?'NAC':'UIB');
+    } else {
+      alert((res && res.message) || 'Falha ao salvar.');
+    }
+  }).setLockerConfig(t, rows, cols);
+}
+
+/** ========= USUÁRIOS ========= **/
+function showUsers(){
+  const content = document.getElementById('mainContent');
+  content.innerHTML = `
+    <div class="card">
+      <h2>Usuários</h2>
+      <div id="usersArea">Carregando...</div>
+      <div class="card" style="margin-top:12px">
+        <h3 style="margin-top:0">Adicionar Usuário</h3>
+        <label>Usuário</label><input id="u_username">
+        <label>Senha</label><input id="u_password" type="password">
+        <label>Email</label><input id="u_email" type="email">
+        <label>Perfil</label>
+        <select id="u_profile">
+          <option value="admin">Admin</option>
+          <option value="armario_visitante">Armário Visitante</option>
+          <option value="guarda_volume">Guarda Volume</option>
+        </select>
+        <button onclick="addUserUI()">Adicionar</button>
+      </div>
+    </div>`;
+  google.script.run.withSuccessHandler(rows=>{
+    const tbl = ['<table><thead><tr><th>Usuário</th><th>Perfil</th><th>Email</th><th>Ações</th></tr></thead><tbody>'];
+    rows.slice(1).forEach(r=>{
+      const u=r[0], p=r[2], e=r[3];
+      tbl.push(`<tr><td>${u}</td><td>${p}</td><td>${e||''}</td><td>
+        <button onclick="resetPassUI('${u}')">Reset Senha</button>
+        <button style="background:#dc3545" onclick="deleteUserUI('${u}')">Excluir</button>
+      </td></tr>`);
+    });
+    tbl.push('</tbody></table>');
+    document.getElementById('usersArea').innerHTML = tbl.join('');
+  }).listUsers();
+}
+function addUserUI(){
+  const u=document.getElementById('u_username').value.trim();
+  const p=document.getElementById('u_password').value;
+  const e=document.getElementById('u_email').value.trim();
+  const pr=document.getElementById('u_profile').value;
+  if(!u||!p){ alert('Usuário e senha são obrigatórios.'); return; }
+  google.script.run.withSuccessHandler(res=>{
+    if(res && res.success){ alert('Usuário adicionado.'); showUsers(); }
+    else alert((res && res.message) || 'Falha ao adicionar.');
+  }).addUser(u,p,pr,e);
+}
+function resetPassUI(u){
+  const np = prompt(`Nova senha para ${u}:`);
+  if(!np) return;
+  google.script.run.withSuccessHandler(res=>{
+    if(res && res.success){ alert('Senha atualizada.'); }
+    else alert((res && res.message) || 'Falha ao atualizar senha.');
+  }).resetPassword(u,np);
+}
+function deleteUserUI(u){
+  if(!confirm(`Excluir usuário ${u}?`)) return;
+  google.script.run.withSuccessHandler(res=>{
+    if(res && res.success){ alert('Usuário excluído.'); showUsers(); }
+    else alert((res && res.message) || 'Falha ao excluir.');
+  }).deleteUser(u);
+}
+
+/** ========= RELATÓRIOS ========= **/
+function showReports(){
+  const content = document.getElementById('mainContent');
+  content.innerHTML = `
+    <div class="card">
+      <h2>Relatórios</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+        <div class="card" style="margin:0">
+          <h3 style="margin-top:0">Visitantes</h3>
+          <button onclick="downloadCSV('visitor')">Baixar CSV</button>
+        </div>
+        <div class="card" style="margin:0">
+          <h3 style="margin-top:0">Acompanhantes</h3>
+          <button onclick="downloadCSV('companion')">Baixar CSV</button>
+        </div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <h3 style="margin-top:0">Registros Recentes (Visitantes)</h3>
+        <div id="regsV">Carregando...</div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <h3 style="margin-top:0">Registros Recentes (Acompanhantes)</h3>
+        <div id="regsC">Carregando...</div>
+      </div>
+    </div>`;
+  google.script.run.withSuccessHandler(rows=>{
+    document.getElementById('regsV').innerHTML = renderTable(rows);
+  }).getRegistrations('visitor');
+  google.script.run.withSuccessHandler(rows=>{
+    document.getElementById('regsC').innerHTML = renderTable(rows);
+  }).getRegistrations('companion');
+}
+function renderTable(rows){
+  if(!rows || rows.length<=1) return '<i>Sem dados</i>';
+  const head = rows[0].map(h=>`<th>${h}</th>`).join('');
+  const body = rows.slice(1).map(r=>`<tr>${r.map(v=>`<td>${(v===null||v===undefined)?'':v}</td>`).join('')}</tr>`).join('');
+  return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+function downloadCSV(type){
+  google.script.run.withSuccessHandler(csv=>{
+    const uri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    const a = document.createElement('a');
+    a.href = uri;
+    a.download = (type==='visitor'?'visitantes':'acompanhantes') + '_registros.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }).exportReport(type);
+}
+
+/** ========= AUDITORIA ========= **/
+function showAudit(){
+  const content = document.getElementById('mainContent');
+  content.innerHTML = `<div class="card"><h2>Auditoria</h2><div id="auditArea">Carregando...</div></div>`;
+  google.script.run.withSuccessHandler(rows=>{
+    document.getElementById('auditArea').innerHTML = renderTable(rows);
+  }).getAuditLog();
+}
+</script>
 </body>
 </html>
