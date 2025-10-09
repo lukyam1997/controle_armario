@@ -22,38 +22,42 @@ function doGet(e) {
 /** ========= SETUP ========= **/
 function safeSetup_() {
   const sheets = [
-    'VisitorLockers','CompanionLockersNAC','CompanionLockersUIB',
+    'VisitorLockers',
     'VisitorRegistrations','CompanionRegistrations',
-    'Users','AuditLog','Settings'
+    'Users','AuditLog','Settings','Units'
   ];
   sheets.forEach(name => { if (!SS.getSheetByName(name)) SS.insertSheet(name); });
 
-  ensureHeaders_('VisitorLockers', ['Number','Status','Visitor Name','Phone','Patient Name','Bed','Start Time','Welcome Sent','Alert Sent','End Time']);
-  ensureHeaders_('CompanionLockersNAC', ['Number','Status','Visitor Name','Phone','Patient Name','Bed','Start Time','Welcome Sent','Alert Sent','End Time']);
-  ensureHeaders_('CompanionLockersUIB', ['Number','Status','Visitor Name','Phone','Patient Name','Bed','Start Time','Welcome Sent','Alert Sent','End Time']);
-  ensureHeaders_('VisitorRegistrations', ['Timestamp','VisitorName','Phone','PatientName','Bed','Locker','Action','Unit']);
-  ensureHeaders_('CompanionRegistrations', ['Timestamp','VisitorName','Phone','PatientName','Bed','Locker','Action','Unit']);
+  ensureHeaders_('VisitorLockers', ['Number','Status','Visitor Name','Phone','Patient Name','Bed','Start Time','Stored Items','Expected End','Status Updated']);
+  ensureHeaders_('VisitorRegistrations', ['Timestamp','VisitorName','Phone','PatientName','Bed','Locker','Action','Unit','Stored Items','Expected End']);
+  ensureHeaders_('CompanionRegistrations', ['Timestamp','VisitorName','Phone','PatientName','Bed','Locker','Action','Unit','Stored Items','Expected End']);
   ensureHeaders_('Users', ['Username','Password','Profile','Email']);
   ensureHeaders_('AuditLog', ['Timestamp','User','Action','Details']);
   ensureHeaders_('Settings', ['Key','Value']);
+
+  ensureHeaders_('Units', ['Unit','Display Name','Active']);
+  const unitSheet = SS.getSheetByName('Units');
+  if (unitSheet.getLastRow() === 1) {
+    unitSheet.appendRow(['NAC','NAC', true]);
+    unitSheet.appendRow(['UIB','UIB', true]);
+  }
 
   const defaults = [
     ['NUM_ARMARIOS_VISITANTE', 20],
     ['NUM_ARMARIOS_VISITANTE_ROWS', 4],
     ['NUM_ARMARIOS_VISITANTE_COLS', 5],
-    ['NUM_ARMARIOS_NAC', 20],
-    ['NUM_ARMARIOS_NAC_ROWS', 4],
-    ['NUM_ARMARIOS_NAC_COLS', 5],
-    ['NUM_ARMARIOS_UIB', 20],
-    ['NUM_ARMARIOS_UIB_ROWS', 4],
-    ['NUM_ARMARIOS_UIB_COLS', 5]
   ];
   defaults.forEach(([k,v])=>{ if (getSetting(k) === null) updateSetting(k, v); });
 
   // Gera planta se estiver vazia
   generateLockers('VisitorLockers', getSetting('NUM_ARMARIOS_VISITANTE'), '', getSetting('NUM_ARMARIOS_VISITANTE_ROWS'), getSetting('NUM_ARMARIOS_VISITANTE_COLS'));
-  generateLockers('CompanionLockersNAC', getSetting('NUM_ARMARIOS_NAC'), 'NAC', getSetting('NUM_ARMARIOS_NAC_ROWS'), getSetting('NUM_ARMARIOS_NAC_COLS'));
-  generateLockers('CompanionLockersUIB', getSetting('NUM_ARMARIOS_UIB'), 'UIB', getSetting('NUM_ARMARIOS_UIB_ROWS'), getSetting('NUM_ARMARIOS_UIB_COLS'));
+  listUnits().forEach(unit => {
+    ensureCompanionDefaults_(unit.name);
+    const sheetName = getCompanionSheetName_(unit.name);
+    if (!SS.getSheetByName(sheetName)) SS.insertSheet(sheetName);
+    ensureHeaders_(sheetName, ['Number','Status','Visitor Name','Phone','Patient Name','Bed','Start Time','Stored Items','Expected End','Status Updated']);
+    generateLockers(sheetName, getSetting(`NUM_ARMARIOS_COMPANION_${unit.key}`), formatUnitKey_(unit.name), getSetting(`NUM_ARMARIOS_COMPANION_${unit.key}_ROWS`), getSetting(`NUM_ARMARIOS_COMPANION_${unit.key}_COLS`));
+  });
 
   // Se não existir usuário, cria admin padrão (pode apagar depois)
   const usersSheet = SS.getSheetByName('Users');
@@ -101,12 +105,16 @@ function generateLockers(sheetName, count, prefix, rows, cols) {
 }
 
 /** ========= SETTINGS ========= **/
-function setLockerConfig(type, rows, cols) {
+function setLockerConfig(type, rows, cols, unit='') {
   let sheetName, prefix, key;
   if (type === 'visitor') { sheetName = 'VisitorLockers'; prefix = ''; key = 'NUM_ARMARIOS_VISITANTE'; }
-  else if (type === 'nac') { sheetName = 'CompanionLockersNAC'; prefix = 'NAC'; key = 'NUM_ARMARIOS_NAC'; }
-  else if (type === 'uib') { sheetName = 'CompanionLockersUIB'; prefix = 'UIB'; key = 'NUM_ARMARIOS_UIB'; }
-  else return { success:false, message:'Tipo inválido' };
+  else if (type === 'companion') {
+    if (!unit) return { success:false, message:'Unidade obrigatória' };
+    const companion = ensureCompanionDefaults_(unit);
+    sheetName = getCompanionSheetName_(unit);
+    prefix = formatUnitKey_(unit);
+    key = `NUM_ARMARIOS_COMPANION_${companion.key}`;
+  } else return { success:false, message:'Tipo inválido' };
 
   const rowsN = Number(rows), colsN = Number(cols);
   if (!rowsN || !colsN) return { success:false, message:'Rows/Cols inválidos' };
@@ -127,8 +135,11 @@ function setLockerConfig(type, rows, cols) {
 function getLockerConfig(type, unit='') {
   let key;
   if (type === 'visitor') key = 'NUM_ARMARIOS_VISITANTE';
-  else if (unit === 'NAC') key = 'NUM_ARMARIOS_NAC';
-  else if (unit === 'UIB') key = 'NUM_ARMARIOS_UIB';
+  else if (type === 'companion') {
+    if (!unit) return { rows:0, cols:0, count:0 };
+    const companion = ensureCompanionDefaults_(unit);
+    key = `NUM_ARMARIOS_COMPANION_${companion.key}`;
+  }
 
   return {
     rows: Number(getSetting(key+'_ROWS')) || 4,
@@ -219,44 +230,53 @@ function listUsers() {
 
 /** ========= ARMÁRIOS ========= **/
 function getLockersData(type, unit='') {
-  const sheetName = type==='visitor' ? 'VisitorLockers' : (unit==='NAC' ? 'CompanionLockersNAC' : 'CompanionLockersUIB');
-  return SS.getSheetByName(sheetName).getDataRange().getValues();
+  const sheetName = resolveLockerSheet_(type, unit);
+  const sheet = SS.getSheetByName(sheetName);
+  const data = sheet.getDataRange().getValues();
+  const updated = recalcStatuses_(sheet, data, type);
+  return updated;
 }
 
 function getLockerStats(type, unit='') {
-  const sheetName = type==='visitor' ? 'VisitorLockers' : (unit==='NAC' ? 'CompanionLockersNAC' : 'CompanionLockersUIB');
-  const data = SS.getSheetByName(sheetName).getDataRange().getValues().slice(1);
-  let free=0, occupied=0, orange=0, red=0;
+  const sheetName = resolveLockerSheet_(type, unit);
+  const sheet = SS.getSheetByName(sheetName);
+  const data = sheet.getDataRange().getValues().slice(1);
+  let free=0, inUse=0, dueSoon=0, overdue=0;
   data.forEach(r=>{
     switch(r[1]) {
       case 'Free': free++; break;
-      case 'Occupied': occupied++; break;
-      case 'Orange': orange++; break;
-      case 'Red': red++; break;
+      case 'InUse': inUse++; break;
+      case 'DueSoon': dueSoon++; break;
+      case 'Overdue': overdue++; break;
     }
   });
-  return { free, occupied, orange, red, total:data.length };
+  return { free, inUse, dueSoon, overdue, total:data.length };
 }
 
-function registerVisitor(patientName, bed, visitorName, phone, type, unit, lockerNum) {
-  const sheetName = type==='visitor' ? 'VisitorLockers' : (unit==='NAC' ? 'CompanionLockersNAC' : 'CompanionLockersUIB');
+function registerVisitor(patientName, bed, visitorName, phone, storedItems, expectedEnd, type, unit, lockerNum) {
+  const sheetName = resolveLockerSheet_(type, unit);
   const sheet = SS.getSheetByName(sheetName);
   const data = sheet.getDataRange().getValues();
 
   for (let i=1; i<data.length; i++) {
     if (data[i][0] == lockerNum && data[i][1] === 'Free') {
       const start = new Date();
-      const end = new Date(start.getTime() + 60*60*1000);
-      sheet.getRange(i+1,2).setValue('Occupied');
+      const end = expectedEnd ? parseDateTimeLocal_(expectedEnd) : '';
+      if (type === 'visitor' && !end) {
+        return { success:false, message:'Horário de saída obrigatório' };
+      }
+      sheet.getRange(i+1,2).setValue('InUse');
       sheet.getRange(i+1,3).setValue(visitorName);
       sheet.getRange(i+1,4).setValue(phone);
       sheet.getRange(i+1,5).setValue(patientName);
       sheet.getRange(i+1,6).setValue(bed);
       sheet.getRange(i+1,7).setValue(start);
-      sheet.getRange(i+1,10).setValue(end);
+      sheet.getRange(i+1,8).setValue(storedItems || '');
+      sheet.getRange(i+1,9).setValue(end || '');
+      sheet.getRange(i+1,10).setValue(new Date());
 
       const regSheet = SS.getSheetByName(type==='visitor' ? 'VisitorRegistrations' : 'CompanionRegistrations');
-      regSheet.appendRow([new Date(), visitorName, phone, patientName, bed, lockerNum, 'Register', unit]);
+      regSheet.appendRow([new Date(), visitorName, phone, patientName, bed, lockerNum, 'Registrar', unit, storedItems || '', end || '']);
       logAudit(Session.getActiveUser().getEmail() || 'anonymous', 'Register', `${visitorName} (${lockerNum})`);
       return { success:true, locker:lockerNum };
     }
@@ -265,19 +285,21 @@ function registerVisitor(patientName, bed, visitorName, phone, type, unit, locke
 }
 
 function checkoutLocker(lockerNum, type, unit) {
-  const sheetName = type==='visitor' ? 'VisitorLockers' : (unit==='NAC' ? 'CompanionLockersNAC' : 'CompanionLockersUIB');
+  const sheetName = resolveLockerSheet_(type, unit);
   const sheet = SS.getSheetByName(sheetName);
   const data = sheet.getDataRange().getValues();
   for (let i=1; i<data.length; i++) {
     if (data[i][0] == lockerNum && data[i][1] !== 'Free') {
       const vname = data[i][2], phone=data[i][3];
+      const stored = data[i][7];
+      const end = data[i][8];
       // Limpa colunas 2..10 e preserva número
       sheet.getRange(i+1,2,1,9).clearContent();
       sheet.getRange(i+1,1).setValue(lockerNum);
       sheet.getRange(i+1,2).setValue('Free');
 
       const regSheet = SS.getSheetByName(type==='visitor' ? 'VisitorRegistrations' : 'CompanionRegistrations');
-      regSheet.appendRow([new Date(), vname, phone, '', '', lockerNum, 'Checkout', unit]);
+      regSheet.appendRow([new Date(), vname, phone, '', '', lockerNum, 'Baixa', unit, stored || '', end || '']);
       logAudit(Session.getActiveUser().getEmail() || 'anonymous','Checkout', `${vname} (${lockerNum})`);
       return { success:true };
     }
@@ -304,7 +326,154 @@ function getAuditLog() {
   return SS.getSheetByName('AuditLog').getDataRange().getValues();
 }
 
+/** ========= UNITS ========= **/
+function listUnits() {
+  const sh = SS.getSheetByName('Units');
+  const data = sh.getDataRange().getValues();
+  const list = [];
+  for (let i=1; i<data.length; i++) {
+    if (String(data[i][2]) === 'true' || data[i][2] === true || data[i][2] === 'TRUE' || data[i][2] === 1) {
+      const name = data[i][0];
+      list.push({ name, display:data[i][1] || name, key: formatUnitKey_(name) });
+    }
+  }
+  return list;
+}
+
+function addUnit(unit, display) {
+  if (!unit) return { success:false, message:'Nome obrigatório' };
+  const sh = SS.getSheetByName('Units');
+  const normalized = unit.trim();
+  const data = sh.getDataRange().getValues();
+  for (let i=1; i<data.length; i++) {
+    if (String(data[i][0]).toLowerCase() === normalized.toLowerCase()) {
+      sh.getRange(i+1,2).setValue(display || normalized);
+      sh.getRange(i+1,3).setValue(true);
+      ensureCompanionDefaults_(normalized);
+      const sheetName = getCompanionSheetName_(normalized);
+      if (!SS.getSheetByName(sheetName)) {
+        SS.insertSheet(sheetName);
+        ensureHeaders_(sheetName, ['Number','Status','Visitor Name','Phone','Patient Name','Bed','Start Time','Stored Items','Expected End','Status Updated']);
+      }
+      return { success:true, updated:true };
+    }
+  }
+  sh.appendRow([normalized, display || normalized, true]);
+  ensureCompanionDefaults_(normalized);
+  const sheetName = getCompanionSheetName_(normalized);
+  if (!SS.getSheetByName(sheetName)) {
+    SS.insertSheet(sheetName);
+    ensureHeaders_(sheetName, ['Number','Status','Visitor Name','Phone','Patient Name','Bed','Start Time','Stored Items','Expected End','Status Updated']);
+  }
+  generateLockers(sheetName, getSetting(`NUM_ARMARIOS_COMPANION_${formatUnitKey_(normalized)}`), formatUnitKey_(normalized), getSetting(`NUM_ARMARIOS_COMPANION_${formatUnitKey_(normalized)}_ROWS`), getSetting(`NUM_ARMARIOS_COMPANION_${formatUnitKey_(normalized)}_COLS`));
+  return { success:true };
+}
+
+function removeUnit(unit) {
+  if (!unit) return { success:false, message:'Nome obrigatório' };
+  const sh = SS.getSheetByName('Units');
+  const data = sh.getDataRange().getValues();
+  for (let i=1; i<data.length; i++) {
+    if (String(data[i][0]).toLowerCase() === unit.toLowerCase()) {
+      sh.getRange(i+1,3).setValue(false);
+      return { success:true };
+    }
+  }
+  return { success:false, message:'Unidade não encontrada' };
+}
+
 /** ========= INCLUDE (para HTML) ========= **/
 function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
+/** ========= HELPERS ========= **/
+function resolveLockerSheet_(type, unit) {
+  if (type === 'visitor') return 'VisitorLockers';
+  if (type === 'companion') {
+    if (!unit) throw new Error('Unidade obrigatória');
+    const info = ensureCompanionDefaults_(unit);
+    const sheetName = getCompanionSheetName_(unit);
+    if (!SS.getSheetByName(sheetName)) {
+      SS.insertSheet(sheetName);
+      ensureHeaders_(sheetName, ['Number','Status','Visitor Name','Phone','Patient Name','Bed','Start Time','Stored Items','Expected End','Status Updated']);
+      generateLockers(sheetName, getSetting(`NUM_ARMARIOS_COMPANION_${info.key}`), unit, getSetting(`NUM_ARMARIOS_COMPANION_${info.key}_ROWS`), getSetting(`NUM_ARMARIOS_COMPANION_${info.key}_COLS`));
+    }
+    return sheetName;
+  }
+  throw new Error('Tipo inválido');
+}
+
+function ensureCompanionDefaults_(unit) {
+  const key = formatUnitKey_(unit);
+  const defaults = [
+    [`NUM_ARMARIOS_COMPANION_${key}`, 20],
+    [`NUM_ARMARIOS_COMPANION_${key}_ROWS`, 4],
+    [`NUM_ARMARIOS_COMPANION_${key}_COLS`, 5]
+  ];
+  const legacy = [
+    [`NUM_ARMARIOS_${key}`, null],
+    [`NUM_ARMARIOS_${key}_ROWS`, null],
+    [`NUM_ARMARIOS_${key}_COLS`, null]
+  ];
+  legacy.forEach(([k])=>{
+    const val = getSetting(k);
+    if (val !== null) {
+      const newKey = k.replace(`NUM_ARMARIOS_${key}`, `NUM_ARMARIOS_COMPANION_${key}`);
+      if (getSetting(newKey) === null) updateSetting(newKey, val);
+    }
+  });
+  defaults.forEach(([k,v])=>{ if (getSetting(k) === null) updateSetting(k, v); });
+  return { name: unit, key };
+}
+
+function formatUnitKey_(unit) {
+  return unit.toUpperCase().replace(/[^A-Z0-9]/g,'_');
+}
+
+function getCompanionSheetName_(unit) {
+  const key = formatUnitKey_(unit);
+  const modern = `CompanionLockers_${key}`;
+  const legacy = `CompanionLockers${key}`;
+  if (SS.getSheetByName(modern)) return modern;
+  if (SS.getSheetByName(legacy)) return legacy;
+  return modern;
+}
+
+function parseDateTimeLocal_(value) {
+  if (!value) return null;
+  try {
+    return new Date(value);
+  } catch (err) {
+    return null;
+  }
+}
+
+function recalcStatuses_(sheet, data, type) {
+  if (!data || data.length <= 1) return data;
+  let needsUpdate = false;
+  const now = new Date();
+  for (let i=1; i<data.length; i++) {
+    const row = data[i];
+    let status = row[1];
+    if (status === 'Free' || !row[0]) continue;
+    let newStatus = 'InUse';
+    const end = row[8];
+    if (type === 'visitor' && end) {
+      const endDate = (end instanceof Date) ? end : new Date(end);
+      const diff = endDate.getTime() - now.getTime();
+      if (diff < 0) newStatus = 'Overdue';
+      else if (diff <= 30*60*1000) newStatus = 'DueSoon';
+      else newStatus = 'InUse';
+    } else {
+      newStatus = 'InUse';
+    }
+    if (status !== newStatus) {
+      data[i][1] = newStatus;
+      sheet.getRange(i+1,2).setValue(newStatus);
+      sheet.getRange(i+1,10).setValue(new Date());
+      needsUpdate = true;
+    }
+  }
+  return needsUpdate ? sheet.getDataRange().getValues() : data;
 }

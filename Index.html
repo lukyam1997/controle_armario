@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Hospital Storage Manager</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --primary:#0d6efd; --primary-dark:#0a58ca;
@@ -13,54 +12,64 @@
     }
     *{box-sizing:border-box} body{margin:0;font-family:'Segoe UI',sans-serif;background:var(--background);color:var(--text)}
     .app{display:flex;height:100vh;overflow:hidden}
-    .sidebar{width:240px;background:#212529;color:#fff;display:flex;flex-direction:column;padding:20px}
+    .sidebar{width:260px;background:#212529;color:#fff;display:flex;flex-direction:column;padding:24px 20px}
     .sidebar h2{margin:0 0 20px;font-size:1.2rem;color:#f8f9fa}
-    .sidebar ul{list-style:none;padding:0;margin:0;flex:1}
-    .sidebar li{padding:12px 14px;margin-bottom:8px;border-radius:6px;cursor:pointer;transition:background .2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sidebar-content{flex:1;display:flex;flex-direction:column;gap:10px}
+    .sidebar ul{list-style:none;padding:0;margin:0}
+    .sidebar-list{margin-bottom:12px}
+    .sidebar li{padding:12px 14px;margin-bottom:8px;border-radius:8px;cursor:pointer;transition:background .2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.95rem}
     .sidebar li:hover{background:#343a40}
+    .sidebar-section{margin:16px 0 8px;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:#adb5bd}
+    .empty-item{opacity:.7;padding:6px 14px 10px 14px;font-size:.9rem}
     .sidebar .logout{border-top:1px solid #343a40;margin-top:auto;padding-top:12px;cursor:pointer;font-weight:bold;color:#ffc107}
-    .main{flex:1;overflow-y:auto;padding:24px}
-    header{background:#fff;padding:16px 24px;border-bottom:1px solid #dee2e6;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between}
+    .main{flex:1;overflow-y:auto;padding:0;display:flex;flex-direction:column}
+    header{background:#fff;padding:18px 28px;border-bottom:1px solid #dee2e6;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+    header h1{margin:0;font-size:1.4rem}
+    .notification{position:relative;cursor:pointer;color:var(--text);font-size:1.3rem}
+    .notification-count{position:absolute;top:-6px;right:-10px;background:var(--danger);color:#fff;font-size:.7rem;font-weight:bold;padding:2px 6px;border-radius:999px;min-width:18px;text-align:center}
     .card{background:#fff;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.08);padding:20px;margin-bottom:24px;transition:transform .2s;overflow:hidden}
     .card:hover{transform:translateY(-2px)}
     .card h2{margin:0 0 16px;font-size:1.1rem;font-weight:600}
-    .stats-overview{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px}
+    .stats-overview{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:20px}
     .stat-card{background:#fff;border-radius:10px;box-shadow:0 2px 4px rgba(0,0,0,.08);padding:14px;text-align:center;font-size:.9rem;font-weight:600;white-space:nowrap}
     .stat-card span{display:block;font-size:1.4rem;margin-top:6px;font-weight:bold}
     .stat-card.free{border-left:5px solid var(--success)}
-    .stat-card.occupied{border-left:5px solid var(--warning)}
-    .stat-card.orange{border-left:5px solid var(--orange)}
-    .stat-card.red{border-left:5px solid var(--danger)}
-    .chart-container{max-width:600px;margin:0 auto}
-    .lockers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:14px;margin-top:20px}
-    .locker{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:10px;font-weight:bold;font-size:.9rem;cursor:pointer;position:relative;transition:transform .2s,box-shadow .2s}
-    .locker:hover{transform:scale(1.08);box-shadow:0 6px 14px rgba(0,0,0,.2)}
-    .locker span{position:absolute;bottom:6px;right:8px;font-size:.75rem;opacity:.7}
+    .stat-card.inuse{border-left:5px solid var(--warning)}
+    .stat-card.duesoon{border-left:5px solid var(--orange)}
+    .stat-card.overdue{border-left:5px solid var(--danger)}
+    .lockers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:18px;margin-top:10px}
+    .locker{aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:14px;font-weight:600;font-size:1rem;cursor:pointer;position:relative;transition:transform .2s,box-shadow .2s;padding:12px;text-align:center}
+    .locker:hover{transform:scale(1.05);box-shadow:0 8px 20px rgba(0,0,0,.16)}
+    .locker small{font-size:.7rem;opacity:.8;margin-top:6px}
     .locker.status-Free{background:#d1e7dd;color:#0f5132}
-    .locker.status-Free::before{content:"🔓";font-size:1.4rem}
-    .locker.status-Occupied{background:#fff3cd;color:#664d03}
-    .locker.status-Occupied::before{content:"🔒";font-size:1.4rem}
-    .locker.status-Orange{background:#ffe5d0;color:#bd5d38}
-    .locker.status-Orange::before{content:"⏳";font-size:1.4rem}
-    .locker.status-Red{background:#f8d7da;color:#842029}
-    .locker.status-Red::before{content:"❌";font-size:1.4rem}
-    .legend{display:flex;gap:20px;justify-content:center;margin-top:20px;font-size:.85rem;color:var(--muted)}
+    .locker.status-Free::before{content:"🔓";font-size:1.6rem}
+    .locker.status-InUse{background:#fff3cd;color:#664d03}
+    .locker.status-InUse::before{content:"🔒";font-size:1.6rem}
+    .locker.status-DueSoon{background:#ffe5d0;color:#bd5d38}
+    .locker.status-DueSoon::before{content:"⏳";font-size:1.6rem}
+    .locker.status-Overdue{background:#f8d7da;color:#842029}
+    .locker.status-Overdue::before{content:"⏰";font-size:1.6rem}
+    .legend{display:flex;gap:20px;justify-content:center;margin:22px 0 8px;font-size:.85rem;color:var(--muted);flex-wrap:wrap}
     .legend div{display:flex;align-items:center;gap:6px}
     .message{padding:10px;margin:10px 0;border-radius:6px;font-weight:600;text-align:center}
     .message.success{background:#d1e7dd;color:#0f5132}
     .message.error{background:#f8d7da;color:#842029}
-    .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:.3s;z-index:1000}
+    .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:.3s;z-index:1000;padding:16px}
     .modal.active{opacity:1;pointer-events:auto}
     .modal-content{background:#fff;padding:20px;border-radius:10px;width:90%;max-width:420px;position:relative}
     .modal-content h2{margin-top:0}
     .modal-close{position:absolute;top:10px;right:10px;cursor:pointer;font-size:1.2rem;color:var(--muted)}
     input,select,button{width:100%;padding:10px;margin-bottom:12px;border-radius:6px;border:1px solid #ced4da;font-size:.95rem}
-    button{background:var(--primary);color:#fff;font-weight:bold;cursor:pointer;transition:background .2s}
+    button{background:var(--primary);color:#fff;font-weight:bold;cursor:pointer;transition:background .2s;border:none}
     button:hover{background:var(--primary-dark)}
+    .secondary{background:#6c757d}
+    .secondary:hover{background:#5a6268}
+    .warning{background:var(--orange)}
+    .warning:hover{background:#e96a00}
     table{width:100%;border-collapse:collapse}
     th,td{padding:8px 10px;border-bottom:1px solid #dee2e6;font-size:.9rem;text-align:left}
     th{background:#f8f9fa}
-    @media(max-width:768px){.sidebar{width:200px}.locker{font-size:.85rem}.stat-card span{font-size:1.2rem}}
+    @media(max-width:768px){.sidebar{width:220px}.locker{font-size:.95rem}.stat-card span{font-size:1.2rem}.lockers-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}}
   </style>
 </head>
 <body>
@@ -83,15 +92,21 @@
   <div id="app" class="app" style="display:none;">
     <aside class="sidebar">
       <h2>Menu</h2>
-      <ul>
-        <li onclick="loadDashboard('visitor')">👥 Armários Visitantes</li>
-        <li onclick="loadDashboard('companion','NAC')">🏥 Armários NAC</li>
-        <li onclick="loadDashboard('companion','UIB')">🏥 Armários UIB</li>
-        <li onclick="showLockerSettings()">⚙️ Configurar Armários</li>
-        <li onclick="showUsers()">👤 Usuários</li>
-        <li onclick="showReports()">📊 Relatórios</li>
-        <li onclick="showAudit()">📝 Auditoria</li>
-      </ul>
+      <div class="sidebar-content">
+        <ul class="sidebar-list">
+          <li onclick="loadDashboard('visitor')">👥 Armários Visitantes</li>
+        </ul>
+        <div class="sidebar-section">Unidades</div>
+        <ul id="unitsMenu" class="sidebar-list"></ul>
+        <div class="sidebar-section">Administração</div>
+        <ul class="sidebar-list">
+          <li onclick="showLockerSettings()">⚙️ Configurações</li>
+          <li onclick="showUnitSettings()">🏢 Unidades</li>
+          <li onclick="showUsers()">👤 Usuários</li>
+          <li onclick="showReports()">📊 Relatórios</li>
+          <li onclick="showAudit()">📝 Auditoria</li>
+        </ul>
+      </div>
       <div class="logout" onclick="handleLogout()">Sair</div>
     </aside>
     <main class="main" id="mainContent"></main>
@@ -111,7 +126,8 @@ const state = {
   user: null,
   view: 'visitor',
   unit: '',
-  chart: null,
+  notifications: [],
+  units: [],
 };
 
 /** ========= AUTH ========= **/
@@ -127,6 +143,7 @@ function submitLogin(e){
         state.user = res;
         document.getElementById('loginPage').style.display = 'none';
         document.getElementById('app').style.display = 'flex';
+        refreshUnitsMenu();
         loadDashboard('visitor');
       } else {
         showError('loginError', (res && res.message) || 'Falha ao autenticar.');
@@ -151,6 +168,18 @@ function showError(elId, msg){
   el.textContent = msg;
   el.style.display = 'block';
 }
+function refreshUnitsMenu(){
+  google.script.run.withSuccessHandler(units=>{
+    state.units = units || [];
+    const container = document.getElementById('unitsMenu');
+    if (!container) return;
+    if (!units.length){
+      container.innerHTML = '<li class="empty-item">Sem unidades</li>';
+      return;
+    }
+    container.innerHTML = units.map(u=>`<li onclick="loadDashboard('companion','${u.name.replace(/'/g,"\\'")}')">🏥 ${u.display}</li>`).join('');
+  }).listUnits();
+}
 function openModal(html){
   document.getElementById('modalBody').innerHTML = html;
   document.getElementById('modal').classList.add('active');
@@ -164,33 +193,44 @@ function closeModal(){
 function loadDashboard(type, unit=''){
   state.view = type; state.unit = unit;
   const content = document.getElementById('mainContent');
-  content.innerHTML = '<div class="card"><h2>Carregando...</h2></div>';
+  content.innerHTML = '<header><h1>Carregando...</h1></header><div class="card"><h2>Preparando dados...</h2></div>';
 
   google.script.run.withSuccessHandler(cfg=>{
     const title = type==='visitor' ? 'Visitantes' : `Acompanhantes - ${unit}`;
     content.innerHTML = `
-      <div class="card">
-        <h2>Planta - ${title}</h2>
+      <header>
+        <h1>${title}</h1>
+        <div class="notification" onclick="showNotifications()">
+          🔔<span id="notifCount" class="notification-count" style="display:none">0</span>
+        </div>
+      </header>
+      <div style="padding:24px;flex:1;overflow-y:auto">
         <div class="stats-overview">
           <div class="stat-card free">🟢 Livres <span id="statFree">0</span></div>
-          <div class="stat-card occupied">🟡 Ocupados <span id="statOccupied">0</span></div>
-          <div class="stat-card orange">🟠 Orange <span id="statOrange">0</span></div>
-          <div class="stat-card red">🔴 Red <span id="statRed">0</span></div>
+          <div class="stat-card inuse">🟡 Em uso <span id="statInUse">0</span></div>
+          <div class="stat-card duesoon">🟠 A vencer <span id="statDueSoon">0</span></div>
+          <div class="stat-card overdue">🔴 Vencidos <span id="statOverdue">0</span></div>
         </div>
-        <div class="chart-container"><canvas id="chart"></canvas></div>
-        <div class="lockers-grid" id="grid"></div>
-        <div class="legend">
-          <div>🔓 Livre</div><div>🔒 Ocupado</div><div>⏳ Orange</div><div>❌ Red</div>
+        <div class="card">
+          <h2>Armários</h2>
+          <div class="lockers-grid" id="grid"></div>
+          <div class="legend">
+            <div>🔓 Livre</div>
+            <div>🔒 Em uso</div>
+            <div>⏳ Próximo do horário</div>
+            <div>⏰ Vencido</div>
+          </div>
         </div>
       </div>`;
     renderLockers(type, unit);
     loadStats(type, unit, cfg);
-  }).getLockerConfig(type, unit);
+  }).getLockerConfig(type==='visitor'?'visitor':'companion', unit);
 }
 
 function renderLockers(type, unit){
   google.script.run.withSuccessHandler(rows=>{
     const grid = document.getElementById('grid');
+    if (!grid) return;
     const headers = rows[0];
     const idx = {
       number: headers.indexOf('Number'),
@@ -200,56 +240,75 @@ function renderLockers(type, unit){
       patient: headers.indexOf('Patient Name'),
       bed: headers.indexOf('Bed'),
       start: headers.indexOf('Start Time'),
-      end: headers.indexOf('End Time'),
+      items: headers.indexOf('Stored Items'),
+      end: headers.indexOf('Expected End'),
     };
+    if (idx.items === -1) idx.items = headers.indexOf('Welcome Sent');
+    if (idx.end === -1) idx.end = headers.indexOf('End Time');
     grid.innerHTML = '';
+    const notifications = [];
     rows.slice(1).forEach(r=>{
       const num = r[idx.number];
       const status = r[idx.status] || 'Free';
       const div = document.createElement('div');
       div.className = `locker status-${status}`;
       div.title = num;
-      div.innerHTML = `${num}<span>${status}</span>`;
+      const subtitle = status==='Free' ? 'Livre' : (status==='InUse' ? 'Em uso' : status==='DueSoon' ? 'A vencer' : 'Vencido');
+      div.innerHTML = `${num}<small>${subtitle}</small>`;
       div.onclick = ()=>{
         if (status === 'Free') {
           openModal(getRegisterFormHTML(num, type, unit));
         } else {
-          openModal(getOccupancyHTML(num, r[idx.visitor], r[idx.phone], r[idx.patient], r[idx.bed], r[idx.start], type, unit));
+          openModal(getOccupancyHTML(num, r[idx.visitor], r[idx.phone], r[idx.patient], r[idx.bed], r[idx.start], r[idx.items], r[idx.end], type, unit));
         }
       };
       grid.appendChild(div);
+      if (status === 'Overdue') {
+        notifications.push({ locker:num, visitor:r[idx.visitor], patient:r[idx.patient], end:r[idx.end] });
+      }
     });
+    state.notifications = notifications;
+    updateNotificationBell();
   }).getLockersData(type, unit);
 }
 
 function loadStats(type, unit, cfg){
   google.script.run.withSuccessHandler(s=>{
     document.getElementById('statFree').innerText = s.free;
-    document.getElementById('statOccupied').innerText = s.occupied;
-    document.getElementById('statOrange').innerText = s.orange;
-    document.getElementById('statRed').innerText = s.red;
-    drawChart([s.free, s.occupied, s.orange, s.red]);
+    document.getElementById('statInUse').innerText = s.inUse;
+    document.getElementById('statDueSoon').innerText = s.dueSoon;
+    document.getElementById('statOverdue').innerText = s.overdue;
   }).getLockerStats(type, unit);
 }
 
-function drawChart(data){
-  const ctx = document.getElementById('chart').getContext('2d');
-  if (state.chart) state.chart.destroy();
-  state.chart = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Livres','Ocupados','Orange','Red'],
-      datasets: [{ data }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: 'bottom' } }
-    }
-  });
+function updateNotificationBell(){
+  const el = document.getElementById('notifCount');
+  if (!el) return;
+  const count = state.notifications.length;
+  el.innerText = count;
+  el.style.display = count ? 'inline-block' : 'none';
+}
+
+function showNotifications(){
+  if (!state.notifications.length) {
+    openModal('<h2>Notificações</h2><p>Tudo em dia! Nenhum armário vencido.</p>');
+    return;
+  }
+  const rows = state.notifications.map(n=>`<li><strong>${n.locker}</strong> - ${n.visitor||'Visitante'} (${n.patient||'Paciente'})<br><small>Vencido às ${formatDateTime(n.end)}</small></li>`).join('');
+  openModal(`<h2>Armários vencidos</h2><ul style="padding-left:18px;display:flex;flex-direction:column;gap:10px;margin:0">${rows}</ul>`);
+}
+
+function formatDateTime(value){
+  if (!value) return '-';
+  try {
+    const d = value instanceof Date ? value : new Date(value);
+    return d.toLocaleString();
+  } catch(e){ return '-'; }
 }
 
 /** ========= MODAL CONTENT ========= **/
 function getRegisterFormHTML(lockerNum, type, unit){
+  const needsEnd = type === 'visitor';
   return `
     <h2>Registrar – Armário ${lockerNum}</h2>
     <label>Nome do Visitante</label>
@@ -260,6 +319,9 @@ function getRegisterFormHTML(lockerNum, type, unit){
     <input id="r_patient" />
     <label>Leito</label>
     <input id="r_bed" />
+    <label>O que foi guardado?</label>
+    <input id="r_items" placeholder="Ex: mochila, documentos" />
+    ${needsEnd ? '<label>Previsão de retirada</label><input id="r_end" type="datetime-local" />' : ''}
     <button onclick="submitRegister('${lockerNum}','${type}','${unit||''}')">Confirmar</button>
   `;
 }
@@ -268,7 +330,11 @@ function submitRegister(lockerNum, type, unit){
   const p = document.getElementById('r_phone').value.trim();
   const pa = document.getElementById('r_patient').value.trim();
   const b = document.getElementById('r_bed').value.trim();
+  const items = document.getElementById('r_items') ? document.getElementById('r_items').value.trim() : '';
+  const end = document.getElementById('r_end') ? document.getElementById('r_end').value : '';
   if (!v || !p || !pa || !b) { alert('Preencha todos os campos.'); return; }
+  if (!items) { alert('Descreva o que foi guardado.'); return; }
+  if (type === 'visitor' && !end) { alert('Informe a hora de saída prevista.'); return; }
 
   google.script.run.withSuccessHandler(res=>{
     if (res && res.success) {
@@ -277,11 +343,12 @@ function submitRegister(lockerNum, type, unit){
     } else {
       alert((res && res.message) || 'Falha ao registrar.');
     }
-  }).registerVisitor(pa, b, v, p, type, unit, lockerNum);
+  }).registerVisitor(pa, b, v, p, items, end, type, unit, lockerNum);
 }
 
-function getOccupancyHTML(lockerNum, visitor, phone, patient, bed, start, type, unit){
-  const started = start ? new Date(start).toLocaleString() : '-';
+function getOccupancyHTML(lockerNum, visitor, phone, patient, bed, start, items, end, type, unit){
+  const started = formatDateTime(start);
+  const expected = formatDateTime(end);
   return `
     <h2>Armário ${lockerNum}</h2>
     <p><b>Visitante:</b> ${visitor || '-'}</p>
@@ -289,17 +356,21 @@ function getOccupancyHTML(lockerNum, visitor, phone, patient, bed, start, type, 
     <p><b>Paciente:</b> ${patient || '-'}</p>
     <p><b>Leito:</b> ${bed || '-'}</p>
     <p><b>Início:</b> ${started}</p>
-    <button style="background:#dc3545" onclick="confirmCheckout('${lockerNum}','${type}','${unit||''}')">Finalizar (Checkout)</button>
+    <p><b>Conteúdo:</b> ${items || '-'}</p>
+    ${type==='visitor' ? `<p><b>Previsão de retirada:</b> ${expected}</p>` : ''}
+    <div style="display:flex;gap:10px;flex-direction:column;margin-top:16px">
+      <button style="background:#dc3545" onclick="confirmCheckout('${lockerNum}','${type}','${unit||''}')">Dar baixa</button>
+    </div>
   `;
 }
 function confirmCheckout(lockerNum, type, unit){
-  if (!confirm(`Confirmar checkout do armário ${lockerNum}?`)) return;
+  if (!confirm(`Confirmar baixa do armário ${lockerNum}?`)) return;
   google.script.run.withSuccessHandler(res=>{
     if (res && res.success) {
       closeModal();
       loadDashboard(state.view, state.unit);
     } else {
-      alert((res && res.message) || 'Falha no checkout.');
+      alert((res && res.message) || 'Falha ao concluir baixa.');
     }
   }).checkoutLocker(lockerNum, type, unit);
 }
@@ -308,40 +379,105 @@ function confirmCheckout(lockerNum, type, unit){
 function showLockerSettings(){
   const content = document.getElementById('mainContent');
   content.innerHTML = `
-    <div class="card">
-      <h2>Configurar Armários</h2>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">
-        ${['visitor','nac','uib'].map(t => `
-          <div class="card" style="margin:0">
-            <h3 style="margin-top:0">${t==='visitor'?'Visitantes':(t==='nac'?'NAC':'UIB')}</h3>
-            <div id="cfg-${t}">Carregando...</div>
-          </div>
-        `).join('')}
-      </div>
+    <header><h1>Configurar Armários</h1></header>
+    <div style="padding:24px">
+      <div class="card" id="cfg-visitor">Carregando...</div>
+      <div id="cfg-companion"></div>
     </div>`;
-  ['visitor','nac','uib'].forEach(t=>{
-    const unit = t==='nac'?'NAC':(t==='uib'?'UIB':'');
-    google.script.run.withSuccessHandler(cfg=>{
-      document.getElementById(`cfg-${t}`).innerHTML = `
-        <label>Linhas</label><input id="rows-${t}" type="number" min="1" value="${cfg.rows}">
-        <label>Colunas</label><input id="cols-${t}" type="number" min="1" value="${cfg.cols}">
-        <button onclick="saveLockerCfg('${t}')">Salvar</button>
-        <p style="color:var(--muted);margin:6px 0 0">Total: ${cfg.rows*cfg.cols}</p>
-      `;
-    }).getLockerConfig(t==='visitor'?'visitor':'companion', unit);
-  });
+  google.script.run.withSuccessHandler(cfg=>{
+    document.getElementById('cfg-visitor').innerHTML = `
+      <h2 style="margin-top:0">Visitantes</h2>
+      <label>Linhas</label><input id="rows-visitor" type="number" min="1" value="${cfg.rows}">
+      <label>Colunas</label><input id="cols-visitor" type="number" min="1" value="${cfg.cols}">
+      <button onclick="saveLockerCfg('visitor')">Salvar</button>
+      <p style="color:var(--muted);margin:6px 0 0">Total: ${cfg.rows*cfg.cols}</p>`;
+  }).getLockerConfig('visitor','');
+  google.script.run.withSuccessHandler(units=>{
+    const container = document.getElementById('cfg-companion');
+    if (!units.length){
+      container.innerHTML = '<div class="card"><h2 style="margin:0">Unidades</h2><p>Cadastre uma unidade para configurar armários.</p></div>';
+      return;
+    }
+    container.innerHTML = units.map(u=>`
+      <div class="card">
+        <h2 style="margin-top:0">${u.display}</h2>
+        <label>Linhas</label><input id="rows-${u.key}" type="number" min="1" value="0">
+        <label>Colunas</label><input id="cols-${u.key}" type="number" min="1" value="0">
+        <button onclick="saveLockerCfg('companion','${u.name.replace(/'/g,"\\'")}','${u.key}')">Salvar</button>
+        <p id="total-${u.key}" style="color:var(--muted);margin:6px 0 0"></p>
+      </div>`).join('');
+    units.forEach(u=>{
+      google.script.run.withSuccessHandler(cfg=>{
+        const rowsEl = document.getElementById(`rows-${u.key}`);
+        const colsEl = document.getElementById(`cols-${u.key}`);
+        if (rowsEl) rowsEl.value = cfg.rows;
+        if (colsEl) colsEl.value = cfg.cols;
+        const totalEl = document.getElementById(`total-${u.key}`);
+        if (totalEl) totalEl.textContent = `Total: ${cfg.rows*cfg.cols}`;
+      }).getLockerConfig('companion', u.name);
+    });
+  }).listUnits();
 }
-function saveLockerCfg(t){
-  const rows = Number(document.getElementById(`rows-${t}`).value);
-  const cols = Number(document.getElementById(`cols-${t}`).value);
+function saveLockerCfg(type, unit='', key=''){
+  const rows = Number(document.getElementById(`rows-${type==='visitor'?'visitor':key}`).value);
+  const cols = Number(document.getElementById(`cols-${type==='visitor'?'visitor':key}`).value);
   google.script.run.withSuccessHandler(res=>{
     if (res && res.success) {
       alert('Configuração salva!');
-      if (t==='visitor') loadDashboard('visitor'); else loadDashboard('companion', t==='nac'?'NAC':'UIB');
+      if (type==='visitor') loadDashboard('visitor'); else loadDashboard('companion', unit);
     } else {
       alert((res && res.message) || 'Falha ao salvar.');
     }
-  }).setLockerConfig(t, rows, cols);
+  }).setLockerConfig(type, rows, cols, unit);
+}
+
+function showUnitSettings(){
+  const content = document.getElementById('mainContent');
+  content.innerHTML = `
+    <header><h1>Unidades</h1></header>
+    <div style="padding:24px">
+      <div class="card">
+        <h2 style="margin-top:0">Cadastrar unidade</h2>
+        <label>Nome interno</label><input id="unit_name" placeholder="Ex: NAC" />
+        <label>Nome exibido</label><input id="unit_display" placeholder="Ex: Núcleo de Atendimento" />
+        <button onclick="addUnitUI()">Adicionar</button>
+      </div>
+      <div class="card">
+        <h2 style="margin-top:0">Unidades ativas</h2>
+        <div id="unitList">Carregando...</div>
+      </div>
+    </div>`;
+  google.script.run.withSuccessHandler(units=>{
+    const list = document.getElementById('unitList');
+    if (!units.length){ list.innerHTML = '<i>Nenhuma unidade cadastrada.</i>'; return; }
+    list.innerHTML = `<table><thead><tr><th>Nome</th><th>Exibição</th><th></th></tr></thead><tbody>${units.map(u=>`<tr><td>${u.name}</td><td>${u.display}</td><td><button class="secondary" onclick="removeUnitUI('${u.name.replace(/'/g,"\\'")}')">Desativar</button></td></tr>`).join('')}</tbody></table>`;
+  }).listUnits();
+}
+function addUnitUI(){
+  const name = document.getElementById('unit_name').value.trim();
+  const display = document.getElementById('unit_display').value.trim();
+  if (!name){ alert('Informe o nome da unidade.'); return; }
+  google.script.run.withSuccessHandler(res=>{
+    if (res && res.success){
+      alert('Unidade salva!');
+      refreshUnitsMenu();
+      showUnitSettings();
+    } else {
+      alert((res && res.message) || 'Falha ao salvar unidade.');
+    }
+  }).addUnit(name, display);
+}
+function removeUnitUI(name){
+  if (!confirm(`Desativar a unidade ${name}?`)) return;
+  google.script.run.withSuccessHandler(res=>{
+    if (res && res.success){
+      alert('Unidade desativada.');
+      refreshUnitsMenu();
+      showUnitSettings();
+    } else {
+      alert((res && res.message) || 'Falha ao desativar.');
+    }
+  }).removeUnit(name);
 }
 
 /** ========= USUÁRIOS ========= **/
