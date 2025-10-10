@@ -396,9 +396,31 @@ function updateUserUnits(username, units) {
 function getLockersData(type, unit='') {
   const sheetName = resolveLockerSheet_(type, unit);
   const sheet = SS.getSheetByName(sheetName);
+  ensureLockerInventory_(sheet, type, unit);
   const data = sheet.getDataRange().getValues();
   const updated = recalcStatuses_(sheet, data, type);
   return updated;
+}
+
+function ensureLockerInventory_(sheet, type, unit) {
+  if (!sheet || !unit) return;
+  const lastRow = sheet.getLastRow();
+  let hasNumbers = false;
+  if (lastRow > 1) {
+    const numbers = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    hasNumbers = numbers.some(row => {
+      const value = row && row[0];
+      return value !== null && value !== undefined && String(value).trim() !== '';
+    });
+  }
+  if (hasNumbers) return;
+  if (type === 'visitor') {
+    const info = ensureVisitorDefaults_(unit);
+    generateLockers(sheet.getName(), getSetting(`NUM_ARMARIOS_VISITOR_${info.key}`), '', getSetting(`NUM_ARMARIOS_VISITOR_${info.key}_ROWS`), getSetting(`NUM_ARMARIOS_VISITOR_${info.key}_COLS`));
+  } else if (type === 'companion') {
+    const info = ensureCompanionDefaults_(unit);
+    generateLockers(sheet.getName(), getSetting(`NUM_ARMARIOS_COMPANION_${info.key}`), unit, getSetting(`NUM_ARMARIOS_COMPANION_${info.key}_ROWS`), getSetting(`NUM_ARMARIOS_COMPANION_${info.key}_COLS`));
+  }
 }
 
 function getLockerStats(type, unit='') {
