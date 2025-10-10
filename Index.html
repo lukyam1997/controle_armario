@@ -220,6 +220,29 @@
         grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
       }
 
+      .filters {
+        background: var(--bg-muted);
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        border: 1px solid var(--border);
+      }
+
+      .filters__group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .filters select {
+        background: var(--bg-card);
+        border: 1px solid rgba(26, 33, 56, 0.12);
+        border-radius: var(--radius-sm);
+        padding: 10px 12px;
+      }
+
       .summary__card {
         background: var(--bg-muted);
         border-radius: var(--radius-sm);
@@ -237,6 +260,137 @@
       .summary__card span {
         color: var(--text-muted);
         font-size: 0.9rem;
+      }
+
+      .monitor {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .monitor__header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .monitor__stats {
+        display: flex;
+        flex-direction: column;
+        text-align: right;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        gap: 4px;
+      }
+
+      .monitor__stats strong {
+        color: var(--text);
+        font-size: 1.1rem;
+      }
+
+      .monitor__stats-note {
+        font-size: 0.78rem;
+      }
+
+      .monitor__grid {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+
+      .monitor-card {
+        background: var(--bg-muted);
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        border: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+      }
+
+      .monitor-card--livre {
+        border-left: 4px solid var(--success);
+      }
+
+      .monitor-card--ocupado {
+        border-left: 4px solid var(--danger);
+      }
+
+      .monitor-card__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .monitor-card__title {
+        font-weight: 700;
+        font-size: 1rem;
+      }
+
+      .monitor-card__badge {
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-weight: 700;
+      }
+
+      .monitor-card__badge--ocupado {
+        background: rgba(214, 69, 69, 0.15);
+        color: var(--danger);
+      }
+
+      .monitor-card__badge--livre {
+        background: rgba(47, 158, 68, 0.15);
+        color: var(--success);
+      }
+
+      .monitor-card__section {
+        display: grid;
+        gap: 6px;
+      }
+
+      .monitor-card__row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 0.85rem;
+      }
+
+      .monitor-card__row--column {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .monitor-card__label {
+        color: var(--text-muted);
+        font-weight: 600;
+      }
+
+      .monitor-card__value {
+        text-align: right;
+      }
+
+      .monitor-card__value--multiline {
+        text-align: left;
+        display: block;
+      }
+
+      .monitor-card__notes {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        border-top: 1px dashed var(--border);
+        padding-top: 8px;
+      }
+
+      .monitor-card__empty {
+        font-size: 0.9rem;
+        color: var(--text-muted);
       }
 
       .table-wrapper {
@@ -403,7 +557,36 @@
               Acompanhe rapidamente quem está utilizando os armários e a situação de cada registro.
             </p>
           </div>
+          <div class="filters" id="globalFilters">
+            <div class="filters__group">
+              <label for="filter-unit">Filtrar por unidade</label>
+              <select id="filter-unit">
+                <option value="">Todas as unidades</option>
+              </select>
+            </div>
+            <div class="filters__group">
+              <label for="filter-profile">Refinar por perfil</label>
+              <select id="filter-profile" disabled>
+                <option value="">Todos os perfis</option>
+              </select>
+            </div>
+          </div>
           <div class="summary" id="summaryCards"></div>
+          <div class="monitor">
+            <div class="monitor__header">
+              <div>
+                <h3 style="margin: 0;">Monitor geral de armários</h3>
+                <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.85rem;">
+                  Visualize a ocupação em tempo real de cada armário cadastrado.
+                </p>
+              </div>
+              <div class="monitor__stats" id="monitorStats"></div>
+            </div>
+            <div class="monitor__grid" id="monitorGrid"></div>
+            <div class="empty" id="monitorEmpty" hidden>
+              Nenhum armário encontrado para os filtros aplicados. Cadastre novos armários ou ajuste a seleção.
+            </div>
+          </div>
           <div class="table-wrapper">
             <table>
               <thead>
@@ -437,6 +620,11 @@
       const state = {
         entries: [],
         summary: null,
+        lockers: [],
+        filters: {
+          unidade: '',
+          perfil: '',
+        },
       };
 
       const form = document.getElementById('entryForm');
@@ -446,7 +634,13 @@
       const tableBody = document.getElementById('entriesBody');
       const emptyState = document.getElementById('emptyState');
       const unitsList = document.getElementById('unitsList');
+      const unitFilter = document.getElementById('filter-unit');
+      const profileFilter = document.getElementById('filter-profile');
+      const monitorGrid = document.getElementById('monitorGrid');
+      const monitorEmpty = document.getElementById('monitorEmpty');
+      const monitorStats = document.getElementById('monitorStats');
       const defaultEmptyMessage = emptyState.textContent;
+      const monitorEmptyDefault = monitorEmpty.textContent;
 
       function setLoading(isLoading) {
         if (isLoading) {
@@ -461,39 +655,70 @@
       function fetchData() {
         summaryContainer.innerHTML = '';
         tableBody.innerHTML = '';
+        monitorGrid.innerHTML = '';
+        monitorStats.textContent = '';
+        monitorEmpty.textContent = monitorEmptyDefault;
+        monitorEmpty.hidden = true;
         emptyState.textContent = defaultEmptyMessage;
         emptyState.hidden = true;
         if (typeof google === 'undefined' || !google.script || !google.script.run) {
           emptyState.hidden = false;
           emptyState.textContent = 'Interface em modo demonstrativo. Publique o app para carregar os dados.';
+          monitorEmpty.hidden = false;
+          monitorEmpty.textContent = 'Interface em modo demonstrativo. Publique o app para visualizar o monitor.';
           return;
         }
         google.script.run
           .withSuccessHandler((result) => {
+            const previousFilters = { ...state.filters };
             state.entries = result.entries || [];
             state.summary = result.summary || null;
+            state.lockers = result.lockers || [];
+            restoreFilters(previousFilters);
             renderSummary();
+            renderFilters();
             renderTable();
+            renderMonitor();
             renderUnitsList();
           })
           .withFailureHandler((err) => {
             console.error(err);
             emptyState.hidden = false;
             emptyState.textContent = 'Não foi possível carregar os dados. Tente novamente em instantes.';
+            monitorEmpty.hidden = false;
+            monitorEmpty.textContent = 'Não foi possível carregar o monitor. Tente novamente em instantes.';
           })
-          .getEntries();
+          .getDashboardData();
+      }
+
+      function restoreFilters(previous) {
+        const unidadesDisponiveis = new Set((state.summary && state.summary.unidades) || []);
+        if (previous && previous.unidade && unidadesDisponiveis.has(previous.unidade)) {
+          state.filters.unidade = previous.unidade;
+        } else {
+          state.filters.unidade = '';
+        }
+        const perfisDisponiveis = new Set(getProfilesForUnit(state.filters.unidade));
+        if (previous && previous.perfil && perfisDisponiveis.has(previous.perfil)) {
+          state.filters.perfil = previous.perfil;
+        } else {
+          state.filters.perfil = '';
+        }
       }
 
       function renderSummary() {
+        summaryContainer.innerHTML = '';
         const summary = state.summary;
         if (!summary) {
-          summaryContainer.innerHTML = '';
           return;
         }
         const cards = [
-          { label: 'Registros ativos', value: summary.ativos, accent: 'var(--success)' },
-          { label: 'Registros finalizados', value: summary.finalizados, accent: 'var(--danger)' },
-          { label: 'Total cadastrado', value: summary.total, accent: 'var(--primary)' },
+          { label: 'Armários ocupados', value: summary.ocupados || 0, accent: 'var(--danger)' },
+          { label: 'Armários livres', value: summary.disponiveis || 0, accent: 'var(--success)' },
+          { label: 'Taxa de ocupação', value: `${summary.ocupacaoPercentual || 0}%`, accent: 'var(--primary)' },
+          { label: 'Registros ativos', value: summary.ativos || 0, accent: 'var(--success)' },
+          { label: 'Registros finalizados', value: summary.finalizados || 0, accent: 'var(--danger)' },
+          { label: 'Total cadastrado', value: summary.total || 0, accent: 'var(--primary)' },
         ];
         cards.forEach((card) => {
           const element = document.createElement('div');
@@ -514,6 +739,86 @@
         }
       }
 
+      function renderFilters() {
+        const summary = state.summary;
+        if (!summary) {
+          unitFilter.innerHTML = '<option value="">Todas as unidades</option>';
+          unitFilter.value = '';
+          profileFilter.innerHTML = '<option value="">Todos os perfis</option>';
+          profileFilter.value = '';
+          profileFilter.disabled = true;
+          return;
+        }
+        const unidades = summary.unidades || [];
+        const unidadeOptions = ['<option value="">Todas as unidades</option>'];
+        unidades.forEach((unidade) => {
+          const value = escapeHtml(unidade);
+          unidadeOptions.push(`<option value="${value}">${value}</option>`);
+        });
+        unitFilter.innerHTML = unidadeOptions.join('');
+        unitFilter.value = state.filters.unidade;
+
+        const perfis = getProfilesForUnit(state.filters.unidade);
+        const perfilOptions = ['<option value="">Todos os perfis</option>'];
+        perfis.forEach((perfil) => {
+          const value = escapeHtml(perfil);
+          perfilOptions.push(`<option value="${value}">${value}</option>`);
+        });
+        profileFilter.innerHTML = perfilOptions.join('');
+        const hasUnit = Boolean(state.filters.unidade);
+        profileFilter.disabled = !hasUnit;
+        if (hasUnit && state.filters.perfil) {
+          profileFilter.value = state.filters.perfil;
+        } else {
+          profileFilter.value = '';
+          if (!hasUnit) {
+            state.filters.perfil = '';
+          }
+        }
+      }
+
+      function getProfilesForUnit(unidade) {
+        const profiles = new Set();
+        const compare = unidade ? unidade : null;
+        state.entries.forEach((entry) => {
+          if (compare && entry.unidade !== compare) return;
+          if (entry.perfil) {
+            profiles.add(entry.perfil);
+          }
+        });
+        state.lockers.forEach((locker) => {
+          if (compare && locker.unidade !== compare) return;
+          if (locker.registro && locker.registro.perfil) {
+            profiles.add(locker.registro.perfil);
+          }
+        });
+        return Array.from(profiles).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+      }
+
+      function getFilteredEntries() {
+        return state.entries.filter((entry) => {
+          if (state.filters.unidade && entry.unidade !== state.filters.unidade) {
+            return false;
+          }
+          if (state.filters.perfil && entry.perfil !== state.filters.perfil) {
+            return false;
+          }
+          return true;
+        });
+      }
+
+      function getFilteredLockers() {
+        return state.lockers.filter((locker) => {
+          if (state.filters.unidade && locker.unidade !== state.filters.unidade) {
+            return false;
+          }
+          if (state.filters.perfil) {
+            return locker.registro && locker.registro.perfil === state.filters.perfil;
+          }
+          return true;
+        });
+      }
+
       function renderUnitsList() {
         unitsList.innerHTML = '';
         const summary = state.summary;
@@ -527,9 +832,15 @@
 
       function renderTable() {
         tableBody.innerHTML = '';
-        const entries = state.entries;
-        if (!entries || !entries.length) {
+        const entries = getFilteredEntries();
+        if (!state.entries.length) {
           emptyState.hidden = false;
+          emptyState.textContent = defaultEmptyMessage;
+          return;
+        }
+        if (!entries.length) {
+          emptyState.hidden = false;
+          emptyState.textContent = 'Nenhum registro corresponde aos filtros aplicados.';
           return;
         }
         emptyState.hidden = true;
@@ -550,6 +861,140 @@
           `;
           tableBody.appendChild(row);
         });
+      }
+
+      function renderMonitor() {
+        monitorGrid.innerHTML = '';
+        const lockers = getFilteredLockers();
+        if (!state.lockers.length) {
+          monitorEmpty.hidden = false;
+          monitorEmpty.textContent = monitorEmptyDefault;
+          monitorStats.textContent = '';
+          return;
+        }
+        if (!lockers.length) {
+          monitorEmpty.hidden = false;
+          monitorEmpty.textContent = 'Nenhum armário encontrado para os filtros aplicados. Cadastre novos armários ou ajuste a seleção.';
+          monitorStats.textContent = '';
+          return;
+        }
+        monitorEmpty.hidden = true;
+        let ocupados = 0;
+        lockers.forEach((locker) => {
+          const status = (locker.status || '').toLowerCase();
+          if (status === 'ocupado') {
+            ocupados += 1;
+          }
+          const card = document.createElement('article');
+          card.className = `monitor-card monitor-card--${status === 'ocupado' ? 'ocupado' : 'livre'}`;
+          card.innerHTML = renderMonitorCard(locker);
+          monitorGrid.appendChild(card);
+        });
+        const total = lockers.length;
+        const livres = total - ocupados;
+        const percentual = Math.round((ocupados / total) * 1000) / 10;
+        monitorStats.innerHTML = `<strong>${ocupados}</strong> ocupados • <strong>${livres}</strong> livres<div class="monitor__stats-note">Ocupação ${isFinite(percentual) ? percentual : 0}%</div>`;
+      }
+
+      function renderMonitorCard(locker) {
+        const statusNormalized = (locker.status || '').toLowerCase() === 'ocupado' ? 'ocupado' : 'livre';
+        const badgeClass = statusNormalized === 'ocupado' ? 'monitor-card__badge--ocupado' : 'monitor-card__badge--livre';
+        const parts = [];
+        parts.push(`
+          <div class="monitor-card__header">
+            <span class="monitor-card__title">${formatCell(locker.armario)}</span>
+            <span class="monitor-card__badge ${badgeClass}">${escapeHtml(locker.status || (statusNormalized === 'ocupado' ? 'Ocupado' : 'Livre'))}</span>
+          </div>
+        `);
+        const section = [];
+        section.push(`
+          <div class="monitor-card__row">
+            <span class="monitor-card__label">Unidade</span>
+            <span class="monitor-card__value">${formatCell(locker.unidade)}</span>
+          </div>
+        `);
+        if (locker.capacidade) {
+          section.push(`
+            <div class="monitor-card__row">
+              <span class="monitor-card__label">Capacidade</span>
+              <span class="monitor-card__value">${formatCell(locker.capacidade)}</span>
+            </div>
+          `);
+        }
+        if (statusNormalized === 'ocupado' && locker.registro) {
+          const registro = locker.registro;
+          if (registro.perfil) {
+            section.push(`
+              <div class="monitor-card__row">
+                <span class="monitor-card__label">Perfil</span>
+                <span class="monitor-card__value">${formatCell(registro.perfil)}</span>
+              </div>
+            `);
+          }
+          if (registro.responsavel || registro.contato) {
+            section.push(`
+              <div class="monitor-card__row monitor-card__row--column">
+                <span class="monitor-card__label">Responsável</span>
+                <span class="monitor-card__value monitor-card__value--multiline">${formatCell(registro.responsavel)}${renderContact(registro.contato)}</span>
+              </div>
+            `);
+          }
+          if (registro.paciente) {
+            section.push(`
+              <div class="monitor-card__row">
+                <span class="monitor-card__label">Paciente</span>
+                <span class="monitor-card__value">${formatCell(registro.paciente)}</span>
+              </div>
+            `);
+          }
+          if (registro.itens) {
+            section.push(`
+              <div class="monitor-card__row monitor-card__row--column">
+                <span class="monitor-card__label">Itens guardados</span>
+                <span class="monitor-card__value monitor-card__value--multiline">${formatMultiline(registro.itens)}</span>
+              </div>
+            `);
+          }
+          if (registro.criadoEm) {
+            section.push(`
+              <div class="monitor-card__row">
+                <span class="monitor-card__label">Registrado</span>
+                <span class="monitor-card__value">${formatCell(registro.criadoEm)}</span>
+              </div>
+            `);
+          }
+        } else {
+          section.push(`
+            <div class="monitor-card__row monitor-card__row--column">
+              <span class="monitor-card__label">Disponibilidade</span>
+              <span class="monitor-card__value monitor-card__value--multiline monitor-card__empty">Disponível para novo registro.</span>
+            </div>
+          `);
+        }
+        parts.push(`<div class="monitor-card__section">${section.join('')}</div>`);
+        const notes = [];
+        if (locker.descricao) {
+          const note = formatMultiline(locker.descricao);
+          if (note !== '—') {
+            notes.push(note);
+          }
+        }
+        if (locker.observacoes) {
+          const note = formatMultiline(locker.observacoes);
+          if (note !== '—') {
+            notes.push(note);
+          }
+        }
+        if (statusNormalized === 'ocupado' && locker.registro && locker.registro.observacoes) {
+          const note = formatMultiline(locker.registro.observacoes);
+          if (note !== '—') {
+            notes.push(note);
+          }
+        }
+        if (notes.length) {
+          parts.push(`<div class="monitor-card__notes">${notes.join('<br />')}</div>`);
+        }
+        return parts.join('');
       }
 
       function renderStatus(status) {
@@ -635,6 +1080,24 @@
 
       refreshButton.addEventListener('click', () => {
         fetchData();
+      });
+
+      unitFilter.addEventListener('change', () => {
+        state.filters.unidade = unitFilter.value;
+        if (!state.filters.unidade) {
+          state.filters.perfil = '';
+        } else if (!getProfilesForUnit(state.filters.unidade).includes(state.filters.perfil)) {
+          state.filters.perfil = '';
+        }
+        renderFilters();
+        renderTable();
+        renderMonitor();
+      });
+
+      profileFilter.addEventListener('change', () => {
+        state.filters.perfil = profileFilter.value;
+        renderTable();
+        renderMonitor();
       });
 
       tableBody.addEventListener('click', (event) => {
