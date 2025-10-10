@@ -294,103 +294,137 @@
         font-size: 0.78rem;
       }
 
-      .monitor__grid {
+      .monitor-board {
         display: grid;
-        gap: 14px;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 18px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       }
 
-      .monitor-card {
+      .monitor-column {
         background: var(--bg-muted);
         border-radius: var(--radius-sm);
-        padding: 16px;
         border: 1px solid var(--border);
+        border-top: 4px solid transparent;
+        padding: 16px;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
         box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+        min-height: 160px;
       }
 
-      .monitor-card--livre {
-        border-left: 4px solid var(--success);
-      }
-
-      .monitor-card--ocupado {
-        border-left: 4px solid var(--danger);
-      }
-
-      .monitor-card__header {
+      .monitor-column__header {
         display: flex;
-        align-items: center;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .monitor-column__title {
+        font-weight: 700;
+        font-size: 0.95rem;
+      }
+
+      .monitor-column__count {
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
+
+      .monitor-column__list {
+        display: grid;
+        gap: 10px;
+        flex: 1;
+      }
+
+      .monitor-column__empty {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
+
+      .monitor-item {
+        background: var(--bg-card);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        border-left: 3px solid transparent;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .monitor-item__header {
+        display: flex;
+        align-items: flex-start;
         justify-content: space-between;
         gap: 8px;
       }
 
-      .monitor-card__title {
+      .monitor-item__title {
         font-weight: 700;
         font-size: 1rem;
       }
 
-      .monitor-card__badge {
-        padding: 4px 10px;
-        border-radius: 999px;
+      .monitor-item__badge {
         font-size: 0.75rem;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(25, 113, 194, 0.12);
+        color: var(--primary);
+        white-space: nowrap;
       }
 
-      .monitor-card__badge--ocupado {
-        background: rgba(214, 69, 69, 0.15);
-        color: var(--danger);
-      }
-
-      .monitor-card__badge--livre {
-        background: rgba(47, 158, 68, 0.15);
-        color: var(--success);
-      }
-
-      .monitor-card__section {
+      .monitor-item__body {
         display: grid;
-        gap: 6px;
+        gap: 8px;
       }
 
-      .monitor-card__row {
+      .monitor-item__row {
         display: flex;
         justify-content: space-between;
         gap: 12px;
         font-size: 0.85rem;
       }
 
-      .monitor-card__row--column {
+      .monitor-item__row--multiline {
         flex-direction: column;
         align-items: flex-start;
       }
 
-      .monitor-card__label {
+      .monitor-item__label {
         color: var(--text-muted);
         font-weight: 600;
       }
 
-      .monitor-card__value {
+      .monitor-item__value {
         text-align: right;
       }
 
-      .monitor-card__value--multiline {
+      .monitor-item__row--multiline .monitor-item__value {
         text-align: left;
-        display: block;
+        width: 100%;
       }
 
-      .monitor-card__notes {
+      .monitor-item__meta {
+        display: block;
+        margin-top: 4px;
+        font-size: 0.78rem;
+        color: var(--text-muted);
+      }
+
+      .monitor-item__empty {
+        color: var(--text-muted);
+        font-style: italic;
+      }
+
+      .monitor-item__notes {
         font-size: 0.82rem;
         color: var(--text-muted);
         border-top: 1px dashed var(--border);
         padding-top: 8px;
-      }
-
-      .monitor-card__empty {
-        font-size: 0.9rem;
-        color: var(--text-muted);
       }
 
       .table-wrapper {
@@ -582,7 +616,7 @@
               </div>
               <div class="monitor__stats" id="monitorStats"></div>
             </div>
-            <div class="monitor__grid" id="monitorGrid"></div>
+            <div class="monitor-board" id="monitorBoard"></div>
             <div class="empty" id="monitorEmpty" hidden>
               Nenhum armário encontrado para os filtros aplicados. Cadastre novos armários ou ajuste a seleção.
             </div>
@@ -636,7 +670,7 @@
       const unitsList = document.getElementById('unitsList');
       const unitFilter = document.getElementById('filter-unit');
       const profileFilter = document.getElementById('filter-profile');
-      const monitorGrid = document.getElementById('monitorGrid');
+      const monitorBoard = document.getElementById('monitorBoard');
       const monitorEmpty = document.getElementById('monitorEmpty');
       const monitorStats = document.getElementById('monitorStats');
       const defaultEmptyMessage = emptyState.textContent;
@@ -655,7 +689,7 @@
       function fetchData() {
         summaryContainer.innerHTML = '';
         tableBody.innerHTML = '';
-        monitorGrid.innerHTML = '';
+        monitorBoard.innerHTML = '';
         monitorStats.textContent = '';
         monitorEmpty.textContent = monitorEmptyDefault;
         monitorEmpty.hidden = true;
@@ -864,7 +898,7 @@
       }
 
       function renderMonitor() {
-        monitorGrid.innerHTML = '';
+        monitorBoard.innerHTML = '';
         const lockers = getFilteredLockers();
         if (!state.lockers.length) {
           monitorEmpty.hidden = false;
@@ -879,122 +913,257 @@
           return;
         }
         monitorEmpty.hidden = true;
-        let ocupados = 0;
+
+        const groups = new Map();
         lockers.forEach((locker) => {
-          const status = (locker.status || '').toLowerCase();
-          if (status === 'ocupado') {
-            ocupados += 1;
+          const meta = getStatusMeta(locker.status);
+          if (!groups.has(meta.key)) {
+            groups.set(meta.key, { meta, items: [] });
           }
-          const card = document.createElement('article');
-          card.className = `monitor-card monitor-card--${status === 'ocupado' ? 'ocupado' : 'livre'}`;
-          card.innerHTML = renderMonitorCard(locker);
-          monitorGrid.appendChild(card);
+          groups.get(meta.key).items.push(locker);
         });
+
+        // garante que os status principais sempre apareçam
+        ['ocupado', 'livre'].forEach((key) => {
+          const meta = getStatusMeta(key);
+          if (!groups.has(meta.key)) {
+            groups.set(meta.key, { meta, items: [] });
+          }
+        });
+
+        const sortedGroups = Array.from(groups.values()).sort((a, b) => {
+          if (a.meta.order !== b.meta.order) {
+            return a.meta.order - b.meta.order;
+          }
+          return a.meta.columnTitle.localeCompare(b.meta.columnTitle, 'pt-BR');
+        });
+
+        sortedGroups.forEach((group) => {
+          const column = document.createElement('section');
+          column.className = 'monitor-column';
+          column.style.borderTopColor = group.meta.accent;
+
+          const header = document.createElement('div');
+          header.className = 'monitor-column__header';
+          header.innerHTML = `
+            <span class="monitor-column__title">${escapeHtml(group.meta.columnTitle)}</span>
+            <span class="monitor-column__count">${group.items.length}</span>
+          `;
+          column.appendChild(header);
+
+          const list = document.createElement('div');
+          list.className = 'monitor-column__list';
+
+          if (!group.items.length) {
+            const emptyMessage = document.createElement('p');
+            emptyMessage.className = 'monitor-column__empty';
+            emptyMessage.textContent = group.meta.emptyMessage;
+            list.appendChild(emptyMessage);
+          } else {
+            group.items.forEach((locker) => {
+              list.appendChild(createMonitorItem(locker, group.meta));
+            });
+          }
+
+          column.appendChild(list);
+          monitorBoard.appendChild(column);
+        });
+
         const total = lockers.length;
-        const livres = total - ocupados;
-        const percentual = Math.round((ocupados / total) * 1000) / 10;
-        monitorStats.innerHTML = `<strong>${ocupados}</strong> ocupados • <strong>${livres}</strong> livres<div class="monitor__stats-note">Ocupação ${isFinite(percentual) ? percentual : 0}%</div>`;
+        const ocupados = groups.get('ocupado') ? groups.get('ocupado').items.length : 0;
+        const livres = groups.get('livre') ? groups.get('livre').items.length : 0;
+        const percentual = total ? Math.round((ocupados / total) * 1000) / 10 : 0;
+        monitorStats.innerHTML = `<strong>${total}</strong> armários • <strong>${ocupados}</strong> em uso • <strong>${livres}</strong> disponíveis<div class="monitor__stats-note">Ocupação ${isFinite(percentual) ? percentual : 0}%</div>`;
       }
 
-      function renderMonitorCard(locker) {
-        const statusNormalized = (locker.status || '').toLowerCase() === 'ocupado' ? 'ocupado' : 'livre';
-        const badgeClass = statusNormalized === 'ocupado' ? 'monitor-card__badge--ocupado' : 'monitor-card__badge--livre';
-        const parts = [];
-        parts.push(`
-          <div class="monitor-card__header">
-            <span class="monitor-card__title">${formatCell(locker.armario)}</span>
-            <span class="monitor-card__badge ${badgeClass}">${escapeHtml(locker.status || (statusNormalized === 'ocupado' ? 'Ocupado' : 'Livre'))}</span>
-          </div>
-        `);
-        const section = [];
-        section.push(`
-          <div class="monitor-card__row">
-            <span class="monitor-card__label">Unidade</span>
-            <span class="monitor-card__value">${formatCell(locker.unidade)}</span>
-          </div>
-        `);
-        if (locker.capacidade) {
-          section.push(`
-            <div class="monitor-card__row">
-              <span class="monitor-card__label">Capacidade</span>
-              <span class="monitor-card__value">${formatCell(locker.capacidade)}</span>
-            </div>
-          `);
-        }
-        if (statusNormalized === 'ocupado' && locker.registro) {
-          const registro = locker.registro;
-          if (registro.perfil) {
-            section.push(`
-              <div class="monitor-card__row">
-                <span class="monitor-card__label">Perfil</span>
-                <span class="monitor-card__value">${formatCell(registro.perfil)}</span>
-              </div>
-            `);
-          }
+      function createMonitorItem(locker, meta) {
+        const item = document.createElement('article');
+        item.className = 'monitor-item';
+        item.style.borderLeftColor = meta.accent;
+
+        const header = document.createElement('header');
+        header.className = 'monitor-item__header';
+
+        const title = document.createElement('span');
+        title.className = 'monitor-item__title';
+        title.innerHTML = formatCell(locker.armario);
+
+        const badge = document.createElement('span');
+        badge.className = 'monitor-item__badge';
+        badge.textContent = locker.status ? locker.status : meta.badgeText;
+        badge.style.color = meta.accent;
+        badge.style.backgroundColor = meta.badgeBackground;
+
+        header.appendChild(title);
+        header.appendChild(badge);
+        item.appendChild(header);
+
+        const body = document.createElement('div');
+        body.className = 'monitor-item__body';
+
+        appendMonitorRow(body, 'Unidade', formatCell(locker.unidade));
+        appendMonitorRow(body, 'Capacidade', formatCell(locker.capacidade));
+
+        const registro = locker.registro || null;
+        const hasRegistro = registro && Object.values(registro).some((value) => value);
+
+        if (hasRegistro) {
+          appendMonitorRow(body, 'Perfil', formatCell(registro.perfil));
           if (registro.responsavel || registro.contato) {
-            section.push(`
-              <div class="monitor-card__row monitor-card__row--column">
-                <span class="monitor-card__label">Responsável</span>
-                <span class="monitor-card__value monitor-card__value--multiline">${formatCell(registro.responsavel)}${renderContact(registro.contato)}</span>
-              </div>
-            `);
+            let responsavel = formatCell(registro.responsavel);
+            if (registro.contato) {
+              responsavel += `<span class="monitor-item__meta">${escapeHtml(registro.contato)}</span>`;
+            }
+            appendMonitorRow(body, 'Responsável', responsavel, { multiline: true, allowPlaceholder: true });
           }
-          if (registro.paciente) {
-            section.push(`
-              <div class="monitor-card__row">
-                <span class="monitor-card__label">Paciente</span>
-                <span class="monitor-card__value">${formatCell(registro.paciente)}</span>
-              </div>
-            `);
-          }
-          if (registro.itens) {
-            section.push(`
-              <div class="monitor-card__row monitor-card__row--column">
-                <span class="monitor-card__label">Itens guardados</span>
-                <span class="monitor-card__value monitor-card__value--multiline">${formatMultiline(registro.itens)}</span>
-              </div>
-            `);
-          }
-          if (registro.criadoEm) {
-            section.push(`
-              <div class="monitor-card__row">
-                <span class="monitor-card__label">Registrado</span>
-                <span class="monitor-card__value">${formatCell(registro.criadoEm)}</span>
-              </div>
-            `);
-          }
-        } else {
-          section.push(`
-            <div class="monitor-card__row monitor-card__row--column">
-              <span class="monitor-card__label">Disponibilidade</span>
-              <span class="monitor-card__value monitor-card__value--multiline monitor-card__empty">Disponível para novo registro.</span>
-            </div>
-          `);
+          appendMonitorRow(body, 'Paciente', formatCell(registro.paciente));
+          appendMonitorRow(body, 'Itens guardados', formatMultiline(registro.itens), { multiline: true });
+          appendMonitorRow(body, 'Registrado', formatCell(registro.criadoEm));
+        } else if (meta.key === 'livre') {
+          appendMonitorRow(
+            body,
+            'Disponibilidade',
+            '<span class="monitor-item__empty">Disponível para novo registro.</span>',
+            { multiline: true, allowPlaceholder: true }
+          );
         }
-        parts.push(`<div class="monitor-card__section">${section.join('')}</div>`);
-        const notes = [];
-        if (locker.descricao) {
-          const note = formatMultiline(locker.descricao);
-          if (note !== '—') {
-            notes.push(note);
-          }
-        }
-        if (locker.observacoes) {
-          const note = formatMultiline(locker.observacoes);
-          if (note !== '—') {
-            notes.push(note);
-          }
-        }
-        if (statusNormalized === 'ocupado' && locker.registro && locker.registro.observacoes) {
-          const note = formatMultiline(locker.registro.observacoes);
-          if (note !== '—') {
-            notes.push(note);
-          }
-        }
+
+        const notes = collectMonitorNotes(locker);
         if (notes.length) {
-          parts.push(`<div class="monitor-card__notes">${notes.join('<br />')}</div>`);
+          const notesElement = document.createElement('div');
+          notesElement.className = 'monitor-item__notes';
+          notesElement.innerHTML = notes.join('<br />');
+          item.appendChild(body);
+          item.appendChild(notesElement);
+        } else {
+          item.appendChild(body);
         }
-        return parts.join('');
+
+        return item;
+      }
+
+      function appendMonitorRow(container, label, value, options = {}) {
+        const settings = { multiline: false, allowPlaceholder: false, ...options };
+        if (!settings.allowPlaceholder && (!value || value === '—')) {
+          return;
+        }
+        const row = document.createElement('div');
+        row.className = 'monitor-item__row';
+        if (settings.multiline) {
+          row.classList.add('monitor-item__row--multiline');
+        }
+        row.innerHTML = `
+          <span class="monitor-item__label">${label}</span>
+          <span class="monitor-item__value">${value}</span>
+        `;
+        container.appendChild(row);
+      }
+
+      function collectMonitorNotes(locker) {
+        const notes = [];
+        [locker.descricao, locker.observacoes, locker.registro && locker.registro.observacoes]
+          .filter(Boolean)
+          .forEach((note) => {
+            const formatted = formatMultiline(note);
+            if (formatted && formatted !== '—') {
+              notes.push(formatted);
+            }
+          });
+        return notes;
+      }
+
+      function simplifyStatus(value) {
+        if (!value) return '';
+        const str = String(value).trim();
+        try {
+          return str
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase();
+        } catch (error) {
+          return str.toLowerCase();
+        }
+      }
+
+      function getStatusMeta(statusValue) {
+        const presets = {
+          ocupado: {
+            key: 'ocupado',
+            columnTitle: 'Em uso',
+            badgeText: 'Em uso',
+            accent: 'var(--danger)',
+            badgeBackground: 'rgba(214, 69, 69, 0.15)',
+            emptyMessage: 'Nenhum armário em uso no momento.',
+            order: 0,
+          },
+          reservado: {
+            key: 'reservado',
+            columnTitle: 'Reservados',
+            badgeText: 'Reservado',
+            accent: 'var(--primary)',
+            badgeBackground: 'rgba(25, 113, 194, 0.14)',
+            emptyMessage: 'Nenhum armário reservado.',
+            order: 1,
+          },
+          manutencao: {
+            key: 'manutencao',
+            columnTitle: 'Em manutenção',
+            badgeText: 'Indisponível',
+            accent: 'var(--warning)',
+            badgeBackground: 'rgba(249, 115, 22, 0.16)',
+            emptyMessage: 'Nenhum armário em manutenção.',
+            order: 2,
+          },
+          livre: {
+            key: 'livre',
+            columnTitle: 'Disponíveis',
+            badgeText: 'Disponível',
+            accent: 'var(--success)',
+            badgeBackground: 'rgba(47, 158, 68, 0.15)',
+            emptyMessage: 'Todos os armários estão ocupados.',
+            order: 3,
+          },
+        };
+
+        const raw = statusValue ? String(statusValue).trim() : '';
+        const simplified = simplifyStatus(raw);
+
+        if (!raw) {
+          return presets.livre;
+        }
+
+        if (simplified.includes('ocup')) {
+          return presets.ocupado;
+        }
+        if (simplified.includes('reserv')) {
+          return presets.reservado;
+        }
+        if (simplified.includes('manut')) {
+          return presets.manutencao;
+        }
+        if (simplified.includes('livr') || simplified.includes('dispon')) {
+          return presets.livre;
+        }
+
+        return {
+          key: simplified || 'outros',
+          columnTitle: capitalizeStatus(raw || 'Outros'),
+          badgeText: raw || 'Status',
+          accent: 'var(--primary)',
+          badgeBackground: 'rgba(25, 113, 194, 0.14)',
+          emptyMessage: `Nenhum armário com status ${raw.toLowerCase()}.`,
+          order: 4,
+        };
+      }
+
+      function capitalizeStatus(value) {
+        if (!value) return '';
+        return value
+          .toLowerCase()
+          .split(' ')
+          .filter(Boolean)
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
       }
 
       function renderStatus(status) {
