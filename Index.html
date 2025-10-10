@@ -5,114 +5,848 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Hospital Storage Manager</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
     :root {
-      --primary:#0d6efd; --primary-dark:#0a58ca;
-      --danger:#dc3545; --success:#198754; --warning:#ffc107; --orange:#fd7e14;
-      --background:#f1f3f5; --text:#212529; --muted:#6c757d;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
-    *{box-sizing:border-box} body{margin:0;font-family:'Segoe UI',sans-serif;background:var(--background);color:var(--text)}
-    .app{display:flex;height:100vh;overflow:hidden}
-    .sidebar{width:260px;background:#212529;color:#fff;display:flex;flex-direction:column;padding:24px 20px}
-    .sidebar h2{margin:0 0 20px;font-size:1.2rem;color:#f8f9fa}
-    .sidebar-content{flex:1;display:flex;flex-direction:column;gap:10px}
-    .sidebar ul{list-style:none;padding:0;margin:0}
-    .sidebar-list{margin-bottom:12px}
-    .sidebar li{padding:12px 14px;margin-bottom:8px;border-radius:8px;cursor:pointer;transition:background .2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.95rem}
-    .sidebar li:hover{background:#343a40}
-    .sidebar-section{margin:16px 0 8px;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:#adb5bd}
-    .empty-item{opacity:.7;padding:6px 14px 10px 14px;font-size:.9rem}
-    .sidebar .logout{border-top:1px solid #343a40;margin-top:auto;padding-top:12px;cursor:pointer;font-weight:bold;color:#ffc107}
-    .main{flex:1;overflow-y:auto;padding:0;display:flex;flex-direction:column}
-    header{background:#fff;padding:18px 28px;border-bottom:1px solid #dee2e6;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
-    header h1{margin:0;font-size:1.4rem}
-    .notification{position:relative;cursor:pointer;color:var(--text);font-size:1.3rem}
-    .notification-count{position:absolute;top:-6px;right:-10px;background:var(--danger);color:#fff;font-size:.7rem;font-weight:bold;padding:2px 6px;border-radius:999px;min-width:18px;text-align:center}
-    .card{background:#fff;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.08);padding:20px;margin-bottom:24px;transition:transform .2s;overflow:hidden}
-    .card:hover{transform:translateY(-2px)}
-    .card h2{margin:0 0 16px;font-size:1.1rem;font-weight:600}
-    .stats-overview{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:20px}
-    .stat-card{background:#fff;border-radius:10px;box-shadow:0 2px 4px rgba(0,0,0,.08);padding:14px;text-align:center;font-size:.9rem;font-weight:600;white-space:nowrap}
-    .stat-card span{display:block;font-size:1.4rem;margin-top:6px;font-weight:bold}
-    .stat-card.free{border-left:5px solid var(--success)}
-    .stat-card.inuse{border-left:5px solid var(--warning)}
-    .stat-card.duesoon{border-left:5px solid var(--orange)}
-    .stat-card.overdue{border-left:5px solid var(--danger)}
-    .lockers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:18px;margin-top:10px}
-    .locker{aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:14px;font-weight:600;font-size:1rem;cursor:pointer;position:relative;transition:transform .2s,box-shadow .2s;padding:12px;text-align:center}
-    .locker:hover{transform:scale(1.05);box-shadow:0 8px 20px rgba(0,0,0,.16)}
-    .locker small{font-size:.7rem;opacity:.8;margin-top:6px}
-    .locker.status-Free{background:#d1e7dd;color:#0f5132}
-    .locker.status-Free::before{content:"🔓";font-size:1.6rem}
-    .locker.status-InUse{background:#fff3cd;color:#664d03}
-    .locker.status-InUse::before{content:"🔒";font-size:1.6rem}
-    .locker.status-DueSoon{background:#ffe5d0;color:#bd5d38}
-    .locker.status-DueSoon::before{content:"⏳";font-size:1.6rem}
-    .locker.status-Overdue{background:#f8d7da;color:#842029}
-    .locker.status-Overdue::before{content:"⏰";font-size:1.6rem}
-    .legend{display:flex;gap:20px;justify-content:center;margin:22px 0 8px;font-size:.85rem;color:var(--muted);flex-wrap:wrap}
-    .legend div{display:flex;align-items:center;gap:6px}
-    .message{padding:10px;margin:10px 0;border-radius:6px;font-weight:600;text-align:center}
-    .message.success{background:#d1e7dd;color:#0f5132}
-    .message.error{background:#f8d7da;color:#842029}
-    .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:.3s;z-index:1000;padding:16px}
-    .modal.active{opacity:1;pointer-events:auto}
-    .modal-content{background:#fff;padding:20px;border-radius:10px;width:90%;max-width:420px;position:relative}
-    .modal-content h2{margin-top:0}
-    .modal-close{position:absolute;top:10px;right:10px;cursor:pointer;font-size:1.2rem;color:var(--muted)}
-    input,select,button{width:100%;padding:10px;margin-bottom:12px;border-radius:6px;border:1px solid #ced4da;font-size:.95rem}
-    button{background:var(--primary);color:#fff;font-weight:bold;cursor:pointer;transition:background .2s;border:none}
-    button:hover{background:var(--primary-dark)}
-    .secondary{background:#6c757d}
-    .secondary:hover{background:#5a6268}
-    .warning{background:var(--orange)}
-    .warning:hover{background:#e96a00}
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:8px 10px;border-bottom:1px solid #dee2e6;font-size:.9rem;text-align:left}
-    th{background:#f8f9fa}
-    @media(max-width:768px){.sidebar{width:220px}.locker{font-size:.95rem}.stat-card span{font-size:1.2rem}.lockers-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}}
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    body[data-theme="light"] {
+      --bg: #f3f4f6;
+      --bg-soft: #eef2ff;
+      --surface: #ffffff;
+      --surface-elevated: #f9fafb;
+      --surface-translucent: rgba(255,255,255,0.85);
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success: #22c55e;
+      --warning: #f97316;
+      --danger: #ef4444;
+      --info: #0ea5e9;
+      --border: rgba(15,23,42,0.08);
+      --shadow: 0 25px 45px rgba(15,23,42,0.08);
+      --sidebar-bg: #0f172a;
+      --sidebar-active: rgba(37,99,235,0.16);
+      --sidebar-text: #e2e8f0;
+      --sidebar-muted: rgba(226,232,240,0.55);
+    }
+
+    body[data-theme="dark"] {
+      --bg: #0b1120;
+      --bg-soft: #111c36;
+      --surface: rgba(15,23,42,0.88);
+      --surface-elevated: rgba(15,23,42,0.92);
+      --surface-translucent: rgba(15,23,42,0.75);
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #4ade80;
+      --warning: #fb923c;
+      --danger: #f87171;
+      --info: #38bdf8;
+      --border: rgba(148,163,184,0.18);
+      --shadow: 0 25px 45px rgba(2,6,23,0.55);
+      --sidebar-bg: rgba(15,23,42,0.95);
+      --sidebar-active: rgba(59,130,246,0.18);
+      --sidebar-text: #f8fafc;
+      --sidebar-muted: rgba(148,163,184,0.7);
+      backdrop-filter: blur(16px);
+      background: radial-gradient(circle at top left, #1e3a8a 0%, #0b1120 55%);
+    }
+
+    body[data-theme="light"] {
+      background: radial-gradient(circle at top right, #e0e7ff 0%, #f3f4f6 55%);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    .login-page {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 40px 16px;
+      position: relative;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface-translucent);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 24px;
+      padding: 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      backdrop-filter: blur(18px);
+    }
+
+    .login-brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .login-brand-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      background: linear-gradient(135deg, var(--primary), var(--info));
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .login-brand h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: var(--text);
+    }
+
+    .login-description {
+      margin: 0;
+      color: var(--text-muted);
+      line-height: 1.5;
+      font-size: 0.96rem;
+    }
+
+    .login-form label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .login-form input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      font-size: 1rem;
+      transition: border 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .login-form input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 14px 18px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 600;
+      font-size: 1rem;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #fff;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .theme-switch {
+      position: absolute;
+      top: 32px;
+      right: 32px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface-translucent);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      backdrop-filter: blur(16px);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .theme-switch:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .message {
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .message.error {
+      background: rgba(239,68,68,0.14);
+      color: var(--danger);
+      border: 1px solid rgba(239,68,68,0.24);
+    }
+
+    .app {
+      display: flex;
+      min-height: 100vh;
+      width: 100%;
+      overflow: hidden;
+      background: transparent;
+    }
+
+    .sidebar {
+      width: 280px;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      display: flex;
+      flex-direction: column;
+      padding: 28px 24px 24px;
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .sidebar-logo span {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #60a5fa, #2563eb);
+      color: #fff;
+    }
+
+    .sidebar .theme-switch.small {
+      position: static;
+      padding: 8px 10px;
+      font-size: 0.85rem;
+      color: var(--sidebar-text);
+      border-color: rgba(255,255,255,0.14);
+      background: rgba(15,23,42,0.6);
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      overflow-y: auto;
+    }
+
+    .sidebar-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-section .section-title {
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--sidebar-muted);
+      font-weight: 600;
+    }
+
+    .nav-item,
+    .unit-item,
+    .sidebar .logout,
+    .admin-link {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: inherit;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .nav-item:hover,
+    .unit-item:hover,
+    .admin-link:hover {
+      background: rgba(255,255,255,0.08);
+    }
+
+    .nav-item.active,
+    .unit-item.active {
+      background: var(--sidebar-active);
+      color: #fff;
+    }
+
+    .unit-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sidebar .logout {
+      margin-top: auto;
+      justify-content: center;
+      font-weight: 700;
+      color: #fca5a5;
+      border: 1px solid rgba(248,113,113,0.35);
+      background: rgba(248,113,113,0.08);
+    }
+
+    .workspace {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: transparent;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(18px);
+      background: var(--surface-translucent);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .topbar-left {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #viewTitle {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .unit-selector {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .unit-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 12px 30px rgba(15,23,42,0.08);
+    }
+
+    .unit-pill select {
+      border: none;
+      background: transparent;
+      color: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .unit-pill select:focus {
+      outline: none;
+    }
+
+    .unit-tag {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .icon-button {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      display: grid;
+      place-items: center;
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .icon-button:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .notification {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .notification-count {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      min-width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      background: var(--danger);
+      color: #fff;
+      font-size: 0.7rem;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      padding: 0 6px;
+    }
+
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .user-chip span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: rgba(59,130,246,0.18);
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .main {
+      flex: 1;
+      padding: 32px 32px 48px;
+      background: transparent;
+      overflow-y: auto;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      border-radius: 18px;
+      padding: 22px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      color: var(--text);
+    }
+
+    .stat-card strong {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+
+    .stat-card span {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 1.2rem;
+      color: var(--text);
+    }
+
+    .locker-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 18px;
+    }
+
+    .locker {
+      border-radius: 18px;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.05rem;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .locker small {
+      font-weight: 500;
+      margin-top: 8px;
+      font-size: 0.8rem;
+    }
+
+    .locker::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent 55%);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .locker:hover {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: var(--shadow);
+    }
+
+    .locker:hover::after {
+      opacity: 1;
+    }
+
+    .locker.status-Free {
+      background: rgba(34,197,94,0.16);
+      color: var(--success);
+    }
+
+    .locker.status-InUse {
+      background: rgba(14,165,233,0.16);
+      color: var(--info);
+    }
+
+    .locker.status-DueSoon {
+      background: rgba(249,115,22,0.16);
+      color: var(--warning);
+    }
+
+    .locker.status-Overdue {
+      background: rgba(239,68,68,0.16);
+      color: var(--danger);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 24px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      color: var(--text);
+    }
+
+    th,
+    td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.92rem;
+      text-align: left;
+    }
+
+    th {
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    input,
+    select,
+    button,
+    textarea {
+      font-family: inherit;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    select {
+      appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+                        linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+      background-position: calc(100% - 18px) calc(1.1em), calc(100% - 12px) calc(1.1em);
+      background-size: 6px 6px;
+      background-repeat: no-repeat;
+      padding-right: 36px;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .btn-secondary {
+      background: rgba(148,163,184,0.16);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      font-weight: 600;
+      transition: transform 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-danger {
+      background: rgba(239,68,68,0.16);
+      color: var(--danger);
+      border: 1px solid rgba(239,68,68,0.4);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 600;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15,23,42,0.55);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      padding: 24px;
+      z-index: 999;
+    }
+
+    .modal.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      width: min(540px, 100%);
+      border-radius: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 28px;
+      position: relative;
+      box-shadow: var(--shadow);
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      font-size: 1.4rem;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    @media (max-width: 1024px) {
+      .sidebar {
+        width: 240px;
+      }
+      .topbar {
+        padding: 18px 20px;
+      }
+      .main {
+        padding: 24px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .app {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 18px;
+      }
+      .sidebar-nav {
+        flex-direction: row;
+        gap: 18px;
+      }
+      .sidebar-section {
+        min-width: 220px;
+      }
+      .workspace {
+        padding-top: 12px;
+      }
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .topbar-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .main {
+        padding: 20px;
+      }
+    }
   </style>
 </head>
-<body>
-  <!-- LOGIN -->
-  <div id="loginPage" class="main">
-    <div class="card" style="max-width:360px;margin:80px auto;">
-      <h2>Acessar sistema</h2>
-      <form id="loginForm" onsubmit="submitLogin(event)">
-        <label>Usuário</label>
-        <input id="username" required />
-        <label>Senha</label>
-        <input type="password" id="password" required />
-        <button type="submit">Entrar</button>
+<body data-theme="light">
+  <div id="loginPage" class="login-page">
+    <button id="loginThemeToggle" class="theme-switch" type="button" onclick="toggleTheme()">🌙 Modo escuro</button>
+    <div class="login-card">
+      <div class="login-brand">
+        <div class="login-brand-icon">🔐</div>
+        <div>
+          <h2>Controle de Armários</h2>
+          <p class="login-description">Organize lockers de visitantes e acompanhantes em uma experiência moderna, com monitoramento em tempo real.</p>
+        </div>
+      </div>
+      <form id="loginForm" class="login-form" onsubmit="submitLogin(event)">
+        <div>
+          <label for="username">Usuário</label>
+          <input id="username" autocomplete="username" required />
+        </div>
+        <div>
+          <label for="password">Senha</label>
+          <input type="password" id="password" autocomplete="current-password" required />
+        </div>
+        <button class="btn-primary" type="submit">Entrar</button>
       </form>
       <div id="loginError" class="message error" style="display:none;"></div>
     </div>
   </div>
 
-  <!-- APP -->
   <div id="app" class="app" style="display:none;">
     <aside class="sidebar">
-      <h2>Menu</h2>
-      <div class="sidebar-content">
-        <ul class="sidebar-list">
-          <li onclick="loadDashboard('visitor')">👥 Armários Visitantes</li>
-        </ul>
-        <div class="sidebar-section">Unidades</div>
-        <ul id="unitsMenu" class="sidebar-list"></ul>
-        <div class="sidebar-section">Administração</div>
-        <ul class="sidebar-list">
-          <li onclick="showLockerSettings()">⚙️ Configurações</li>
-          <li onclick="showUnitSettings()">🏢 Unidades</li>
-          <li onclick="showUsers()">👤 Usuários</li>
-          <li onclick="showReports()">📊 Relatórios</li>
-          <li onclick="showAudit()">📝 Auditoria</li>
-        </ul>
+      <div class="sidebar-header">
+        <div class="sidebar-logo"><span>🔒</span> Controle</div>
+        <button id="sidebarThemeToggle" class="theme-switch small" type="button" onclick="toggleTheme()">🌙</button>
       </div>
-      <div class="logout" onclick="handleLogout()">Sair</div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">
+          <span class="section-title">Visão geral</span>
+          <button class="nav-item" data-view="visitor" onclick="loadDashboard('visitor')">👥 Armários Visitantes</button>
+          <button class="nav-item" data-view="companion" onclick="loadDashboard('companion')">🧳 Armários Acompanhantes</button>
+        </div>
+        <div class="sidebar-section">
+          <span class="section-title">Unidades</span>
+          <div id="unitsMenu" class="unit-list"></div>
+        </div>
+        <div id="adminSection" class="sidebar-section" style="display:none;">
+          <span class="section-title">Administração</span>
+          <button class="admin-link" onclick="showLockerSettings()">⚙️ Configurações de Armários</button>
+          <button class="admin-link" onclick="showUnitSettings()">🏢 Unidades</button>
+          <button class="admin-link" onclick="showUsers()">👤 Usuários</button>
+          <button class="admin-link" onclick="showReports()">📊 Relatórios</button>
+          <button class="admin-link" onclick="showAudit()">📝 Auditoria</button>
+        </div>
+      </nav>
+      <button class="logout" onclick="handleLogout()">Sair</button>
     </aside>
-    <main class="main" id="mainContent"></main>
+    <div class="workspace">
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 id="viewTitle">Painel</h1>
+          <div class="unit-selector" id="unitSelector"></div>
+        </div>
+        <div class="topbar-actions">
+          <button id="headerThemeToggle" class="icon-button" type="button" onclick="toggleTheme()">🌙</button>
+          <div class="notification" onclick="showNotifications()">
+            <span id="notifIcon" class="icon-button" style="width:44px;height:44px;display:grid;place-items:center;">🔔</span>
+            <span id="notifCount" class="notification-count" style="display:none;">0</span>
+          </div>
+          <div id="userChip" class="user-chip" style="display:none;"></div>
+        </div>
+      </header>
+      <main class="main" id="mainContent"></main>
+    </div>
   </div>
 
-  <!-- MODAL -->
   <div id="modal" class="modal">
     <div class="modal-content">
       <span class="modal-close" onclick="closeModal()">&times;</span>
@@ -121,16 +855,51 @@
   </div>
 
 <script>
-/** ========= STATE ========= **/
+const savedTheme = (()=>{ try { return localStorage.getItem('lockerTheme') || 'light'; } catch(e){ return 'light'; }})();
+document.body.setAttribute('data-theme', savedTheme);
+
 const state = {
   user: null,
   view: 'visitor',
-  unit: '',
-  notifications: [],
+  currentUnit: null,
   units: [],
+  availableUnits: [],
+  notifications: [],
+  theme: savedTheme,
+  activePage: 'dashboard',
 };
 
-/** ========= AUTH ========= **/
+const PROFILES = {
+  ADMIN: 'admin',
+  VISITOR: 'armario_visitante',
+  COMPANION: 'guarda_volume',
+};
+
+function toggleTheme(){
+  state.theme = state.theme === 'light' ? 'dark' : 'light';
+  applyTheme(state.theme);
+}
+
+function applyTheme(theme){
+  state.theme = theme;
+  document.body.setAttribute('data-theme', theme);
+  try { localStorage.setItem('lockerTheme', theme); } catch(e){}
+  updateThemeButtons();
+}
+
+function updateThemeButtons(){
+  const label = state.theme === 'dark' ? '🌞 Modo claro' : '🌙 Modo escuro';
+  const icon = state.theme === 'dark' ? '🌞' : '🌙';
+  const loginBtn = document.getElementById('loginThemeToggle');
+  if (loginBtn) loginBtn.textContent = label;
+  const sidebarBtn = document.getElementById('sidebarThemeToggle');
+  if (sidebarBtn) sidebarBtn.textContent = icon;
+  const headerBtn = document.getElementById('headerThemeToggle');
+  if (headerBtn) headerBtn.textContent = icon;
+}
+
+updateThemeButtons();
+
 function submitLogin(e){
   e.preventDefault();
   const username = document.getElementById('username').value.trim();
@@ -140,11 +909,7 @@ function submitLogin(e){
   google.script.run
     .withSuccessHandler(res=>{
       if (res && res.success) {
-        state.user = res;
-        document.getElementById('loginPage').style.display = 'none';
-        document.getElementById('app').style.display = 'flex';
-        refreshUnitsMenu();
-        loadDashboard('visitor');
+        setupAfterLogin(res);
       } else {
         showError('loginError', (res && res.message) || 'Falha ao autenticar.');
       }
@@ -154,83 +919,251 @@ function submitLogin(e){
     })
     .login(username, password);
 }
-function handleLogout(){
-  state.user = null;
-  // reset simples
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('loginPage').style.display = 'block';
-  document.getElementById('loginForm').reset();
+
+function setupAfterLogin(user){
+  state.user = user;
+  state.view = 'visitor';
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  updateThemeButtons();
+  renderUserChip();
+  loadUnitsAndStart(true);
 }
 
-/** ========= UI HELPERS ========= **/
+function renderUserChip(){
+  const chip = document.getElementById('userChip');
+  if (!chip || !state.user) return;
+  const initials = (state.user.username || '?').substring(0,2).toUpperCase();
+  chip.innerHTML = `<span>${initials}</span>${state.user.username}`;
+  chip.style.display = 'flex';
+}
+
+function handleLogout(){
+  state.user = null;
+  state.units = [];
+  state.currentUnit = null;
+  state.availableUnits = [];
+  state.notifications = [];
+  state.activePage = 'dashboard';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('loginForm').reset();
+  document.getElementById('userChip').style.display = 'none';
+  updateThemeButtons();
+  updateNotificationBell();
+}
+
 function showError(elId, msg){
   const el = document.getElementById(elId);
+  if (!el) return;
   el.textContent = msg;
   el.style.display = 'block';
 }
-function refreshUnitsMenu(){
+
+function loadUnitsAndStart(reloadDashboard = true, callback){
   google.script.run.withSuccessHandler(units=>{
     state.units = units || [];
-    const container = document.getElementById('unitsMenu');
-    if (!container) return;
-    if (!units.length){
-      container.innerHTML = '<li class="empty-item">Sem unidades</li>';
-      return;
+    const currentName = state.currentUnit ? state.currentUnit.name : '';
+    const assignedUnit = state.user.unit || '';
+    let availableUnits = [];
+    if (isAdmin()) {
+      availableUnits = state.units.slice();
+    } else {
+      availableUnits = state.units.filter(u=>u.name === assignedUnit);
+      if (!availableUnits.length && assignedUnit) {
+        availableUnits = [{ name: assignedUnit, display: assignedUnit, key: assignedUnit.replace(/[^A-Za-z0-9]/g,'_').toUpperCase() }];
+      }
     }
-    container.innerHTML = units.map(u=>`<li onclick="loadDashboard('companion','${u.name.replace(/'/g,"\\'")}')">🏥 ${u.display}</li>`).join('');
+    state.availableUnits = availableUnits;
+
+    const findInList = (arr, name) => (arr || []).find(u=>u.name === name) || null;
+    let nextUnit = currentName ? findInList(availableUnits, currentName) || findInList(state.units, currentName) : null;
+    if (!nextUnit && assignedUnit) {
+      nextUnit = findInList(availableUnits, assignedUnit) || findInList(state.units, assignedUnit);
+    }
+    if (!nextUnit) {
+      nextUnit = availableUnits[0] || state.units[0] || null;
+    }
+    state.currentUnit = nextUnit;
+
+    updateAdminVisibility();
+    refreshUnitsMenu();
+    updateUnitSelector();
+    updateNavigation();
+
+    if (reloadDashboard) {
+      loadDashboard(state.view || 'visitor');
+    } else if (typeof callback === 'function') {
+      callback();
+    }
   }).listUnits();
 }
-function openModal(html){
-  document.getElementById('modalBody').innerHTML = html;
-  document.getElementById('modal').classList.add('active');
-}
-function closeModal(){
-  document.getElementById('modal').classList.remove('active');
-  document.getElementById('modalBody').innerHTML = '';
+
+function findUnit(name){
+  if (!name) return null;
+  const fromAvailable = (state.availableUnits || []).find(u=>u.name === name);
+  if (fromAvailable) return fromAvailable;
+  const fromAll = (state.units || []).find(u=>u.name === name);
+  return fromAll || null;
 }
 
-/** ========= DASHBOARD ========= **/
-function loadDashboard(type, unit=''){
-  state.view = type; state.unit = unit;
+function isAdmin(){
+  return state.user && state.user.profile === PROFILES.ADMIN;
+}
+
+function updateAdminVisibility(){
+  const section = document.getElementById('adminSection');
+  if (section) section.style.display = isAdmin() ? 'flex' : 'none';
+}
+
+function updateUnitSelector(){
+  const container = document.getElementById('unitSelector');
+  if (!container) return;
+  const unit = state.currentUnit;
+  if (!unit) {
+    container.innerHTML = '<span class="unit-pill">Nenhuma unidade ativa</span>';
+    return;
+  }
+  if (isAdmin()) {
+    if (!state.units || !state.units.length) {
+      container.innerHTML = '<div class="unit-pill"><strong>Unidade</strong><span class="unit-tag" style="color:var(--text-muted);">Nenhuma unidade ativa</span></div>';
+      return;
+    }
+    const options = state.units.map(u=>`<option value="${u.name.replace(/"/g,'&quot;')}" ${unit.name===u.name?'selected':''}>${u.display}</option>`).join('');
+    container.innerHTML = `<div class="unit-pill"><strong>Unidade</strong><select onchange="handleUnitChange(this.value)">${options}</select></div>`;
+  } else {
+    container.innerHTML = `<div class="unit-pill"><strong>Unidade</strong><span class="unit-tag">${unit.display}</span></div>`;
+  }
+}
+
+function handleUnitChange(name){
+  const unit = findUnit(name);
+  if (!unit) return;
+  state.currentUnit = unit;
+  refreshUnitsMenu();
+  updateUnitSelector();
+  goToCurrentPage();
+}
+
+function refreshUnitsMenu(){
+  const container = document.getElementById('unitsMenu');
+  if (!container) return;
+  const units = isAdmin() ? state.units : (state.availableUnits || []);
+  if (!units.length){
+    container.innerHTML = '<span style="color:var(--sidebar-muted);">Sem unidades</span>';
+    return;
+  }
+  container.innerHTML = units.map(u=>{
+    const active = state.currentUnit && state.currentUnit.name === u.name;
+    return `<button class="unit-item ${active?'active':''}" onclick="changeUnit('${u.name.replace(/'/g,"\\'")}')">🏥 ${u.display}</button>`;
+  }).join('');
+}
+
+function changeUnit(name){
+  const unit = findUnit(name);
+  if (!unit) return;
+  state.currentUnit = unit;
+  updateUnitSelector();
+  refreshUnitsMenu();
+  goToCurrentPage();
+}
+
+function goToCurrentPage(){
+  switch (state.activePage) {
+    case 'dashboard':
+      loadDashboard(state.view);
+      break;
+    case 'settings':
+      showLockerSettings();
+      break;
+    case 'units':
+      showUnitSettings();
+      break;
+    case 'users':
+      showUsers();
+      break;
+    case 'reports':
+      showReports();
+      break;
+    case 'audit':
+      showAudit();
+      break;
+    default:
+      loadDashboard(state.view);
+  }
+}
+
+function updateNavigation(){
+  const buttons = document.querySelectorAll('.nav-item');
+  buttons.forEach(btn=>{
+    if (btn.dataset.view === state.view) btn.classList.add('active');
+    else btn.classList.remove('active');
+  });
+  const title = state.view === 'visitor' ? 'Armários de Visitantes' : 'Armários de Acompanhantes';
+  const unitLabel = state.currentUnit ? ` · ${state.currentUnit.display}` : '';
+  const titleEl = document.getElementById('viewTitle');
+  if (titleEl) titleEl.textContent = title + unitLabel;
+}
+
+function loadDashboard(type){
+  state.view = type;
+  state.activePage = 'dashboard';
+  updateNavigation();
   const content = document.getElementById('mainContent');
-  content.innerHTML = '<header><h1>Carregando...</h1></header><div class="card"><h2>Preparando dados...</h2></div>';
+  if (!content) return;
+  state.notifications = [];
+  updateNotificationBell();
+  if (!state.currentUnit) {
+    content.innerHTML = '<div class="card"><h2>Selecione uma unidade</h2><p>Para visualizar os armários, escolha uma unidade ativa.</p></div>';
+    return;
+  }
+  content.innerHTML = `
+    <section class="dashboard">
+      <div class="dashboard-grid">
+        <div class="stat-card" id="statCardFree"><span>Livres</span><strong id="statFree">0</strong></div>
+        <div class="stat-card" id="statCardInUse"><span>Em uso</span><strong id="statInUse">0</strong></div>
+        <div class="stat-card" id="statCardDueSoon"><span>Próximo do horário</span><strong id="statDueSoon">0</strong></div>
+        <div class="stat-card" id="statCardOverdue"><span>Vencidos</span><strong id="statOverdue">0</strong></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2>Monitor de armários</h2>
+          <button class="btn-secondary" onclick="refreshCurrentView()">Atualizar</button>
+        </div>
+        <div class="locker-grid" id="grid"></div>
+        <div class="legend">
+          <span>🔓 Livre</span>
+          <span>🔒 Em uso</span>
+          <span>⏳ Próximo do horário</span>
+          <span>⏰ Vencido</span>
+        </div>
+      </div>
+    </section>`;
 
+  const unitName = state.currentUnit.name;
   google.script.run.withSuccessHandler(cfg=>{
-    const title = type==='visitor' ? 'Visitantes' : `Acompanhantes - ${unit}`;
-    content.innerHTML = `
-      <header>
-        <h1>${title}</h1>
-        <div class="notification" onclick="showNotifications()">
-          🔔<span id="notifCount" class="notification-count" style="display:none">0</span>
-        </div>
-      </header>
-      <div style="padding:24px;flex:1;overflow-y:auto">
-        <div class="stats-overview">
-          <div class="stat-card free">🟢 Livres <span id="statFree">0</span></div>
-          <div class="stat-card inuse">🟡 Em uso <span id="statInUse">0</span></div>
-          <div class="stat-card duesoon">🟠 A vencer <span id="statDueSoon">0</span></div>
-          <div class="stat-card overdue">🔴 Vencidos <span id="statOverdue">0</span></div>
-        </div>
-        <div class="card">
-          <h2>Armários</h2>
-          <div class="lockers-grid" id="grid"></div>
-          <div class="legend">
-            <div>🔓 Livre</div>
-            <div>🔒 Em uso</div>
-            <div>⏳ Próximo do horário</div>
-            <div>⏰ Vencido</div>
-          </div>
-        </div>
-      </div>`;
-    renderLockers(type, unit);
-    loadStats(type, unit, cfg);
-  }).getLockerConfig(type==='visitor'?'visitor':'companion', unit);
+    renderLockers(type, unitName);
+    loadStats(type, unitName, cfg);
+  }).getLockerConfig(type, unitName);
+}
+
+function refreshCurrentView(){
+  loadDashboard(state.view);
 }
 
 function renderLockers(type, unit){
   google.script.run.withSuccessHandler(rows=>{
+    if (!state.currentUnit || state.currentUnit.name !== unit) return;
     const grid = document.getElementById('grid');
     if (!grid) return;
+    if (!rows || !rows.length){
+      grid.innerHTML = '<p style="color:var(--text-muted);">Nenhum armário configurado.</p>';
+      return;
+    }
+    if (rows.length <= 1){
+      grid.innerHTML = '<p style="color:var(--text-muted);">Nenhum armário configurado.</p>';
+      return;
+    }
     const headers = rows[0];
     const idx = {
       number: headers.indexOf('Number'),
@@ -248,18 +1181,18 @@ function renderLockers(type, unit){
     grid.innerHTML = '';
     const notifications = [];
     rows.slice(1).forEach(r=>{
+      if (!r[idx.number]) return;
       const num = r[idx.number];
       const status = r[idx.status] || 'Free';
       const div = document.createElement('div');
       div.className = `locker status-${status}`;
-      div.title = num;
       const subtitle = status==='Free' ? 'Livre' : (status==='InUse' ? 'Em uso' : status==='DueSoon' ? 'A vencer' : 'Vencido');
       div.innerHTML = `${num}<small>${subtitle}</small>`;
       div.onclick = ()=>{
         if (status === 'Free') {
-          openModal(getRegisterFormHTML(num, type, unit));
+          openModal(getRegisterFormHTML(num, type));
         } else {
-          openModal(getOccupancyHTML(num, r[idx.visitor], r[idx.phone], r[idx.patient], r[idx.bed], r[idx.start], r[idx.items], r[idx.end], type, unit));
+          openModal(getOccupancyHTML(num, r[idx.visitor], r[idx.phone], r[idx.patient], r[idx.bed], r[idx.start], r[idx.items], r[idx.end], type));
         }
       };
       grid.appendChild(div);
@@ -272,12 +1205,17 @@ function renderLockers(type, unit){
   }).getLockersData(type, unit);
 }
 
-function loadStats(type, unit, cfg){
+function loadStats(type, unit){
   google.script.run.withSuccessHandler(s=>{
-    document.getElementById('statFree').innerText = s.free;
-    document.getElementById('statInUse').innerText = s.inUse;
-    document.getElementById('statDueSoon').innerText = s.dueSoon;
-    document.getElementById('statOverdue').innerText = s.overdue;
+    if (!state.currentUnit || state.currentUnit.name !== unit) return;
+    const setText = (id, value)=>{
+      const el = document.getElementById(id);
+      if (el) el.innerText = value;
+    };
+    setText('statFree', s.free);
+    setText('statInUse', s.inUse);
+    setText('statDueSoon', s.dueSoon);
+    setText('statOverdue', s.overdue);
   }).getLockerStats(type, unit);
 }
 
@@ -285,8 +1223,8 @@ function updateNotificationBell(){
   const el = document.getElementById('notifCount');
   if (!el) return;
   const count = state.notifications.length;
-  el.innerText = count;
-  el.style.display = count ? 'inline-block' : 'none';
+  el.textContent = count;
+  el.style.display = count ? 'grid' : 'none';
 }
 
 function showNotifications(){
@@ -306,8 +1244,17 @@ function formatDateTime(value){
   } catch(e){ return '-'; }
 }
 
-/** ========= MODAL CONTENT ========= **/
-function getRegisterFormHTML(lockerNum, type, unit){
+function openModal(html){
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modal').classList.add('active');
+}
+
+function closeModal(){
+  document.getElementById('modal').classList.remove('active');
+  document.getElementById('modalBody').innerHTML = '';
+}
+
+function getRegisterFormHTML(lockerNum, type){
   const needsEnd = type === 'visitor';
   return `
     <h2>Registrar – Armário ${lockerNum}</h2>
@@ -322,10 +1269,11 @@ function getRegisterFormHTML(lockerNum, type, unit){
     <label>O que foi guardado?</label>
     <input id="r_items" placeholder="Ex: mochila, documentos" />
     ${needsEnd ? '<label>Previsão de retirada</label><input id="r_end" type="datetime-local" />' : ''}
-    <button onclick="submitRegister('${lockerNum}','${type}','${unit||''}')">Confirmar</button>
+    <button class="btn-primary" type="button" onclick="submitRegister('${lockerNum}','${type}')">Confirmar</button>
   `;
 }
-function submitRegister(lockerNum, type, unit){
+
+function submitRegister(lockerNum, type){
   const v = document.getElementById('r_visitor').value.trim();
   const p = document.getElementById('r_phone').value.trim();
   const pa = document.getElementById('r_patient').value.trim();
@@ -334,19 +1282,21 @@ function submitRegister(lockerNum, type, unit){
   const end = document.getElementById('r_end') ? document.getElementById('r_end').value : '';
   if (!v || !p || !pa || !b) { alert('Preencha todos os campos.'); return; }
   if (!items) { alert('Descreva o que foi guardado.'); return; }
-  if (type === 'visitor' && !end) { alert('Informe a hora de saída prevista.'); return; }
+  if (type === 'visitor' && !end) { alert('Informe a previsão de retirada.'); return; }
+  const unit = state.currentUnit ? state.currentUnit.name : '';
+  if (!unit) { alert('Selecione uma unidade ativa antes de registrar.'); return; }
 
   google.script.run.withSuccessHandler(res=>{
     if (res && res.success) {
       closeModal();
-      loadDashboard(state.view, state.unit);
+      loadDashboard(state.view);
     } else {
       alert((res && res.message) || 'Falha ao registrar.');
     }
   }).registerVisitor(pa, b, v, p, items, end, type, unit, lockerNum);
 }
 
-function getOccupancyHTML(lockerNum, visitor, phone, patient, bed, start, items, end, type, unit){
+function getOccupancyHTML(lockerNum, visitor, phone, patient, bed, start, items, end, type){
   const started = formatDateTime(start);
   const expected = formatDateTime(end);
   return `
@@ -359,72 +1309,79 @@ function getOccupancyHTML(lockerNum, visitor, phone, patient, bed, start, items,
     <p><b>Conteúdo:</b> ${items || '-'}</p>
     ${type==='visitor' ? `<p><b>Previsão de retirada:</b> ${expected}</p>` : ''}
     <div style="display:flex;gap:10px;flex-direction:column;margin-top:16px">
-      <button style="background:#dc3545" onclick="confirmCheckout('${lockerNum}','${type}','${unit||''}')">Dar baixa</button>
+      <button class="btn-danger" type="button" onclick="confirmCheckout('${lockerNum}','${type}')">Dar baixa</button>
     </div>
   `;
 }
-function confirmCheckout(lockerNum, type, unit){
+
+function confirmCheckout(lockerNum, type){
   if (!confirm(`Confirmar baixa do armário ${lockerNum}?`)) return;
+  const unit = state.currentUnit ? state.currentUnit.name : '';
+  if (!unit) { alert('Selecione uma unidade ativa.'); return; }
   google.script.run.withSuccessHandler(res=>{
     if (res && res.success) {
       closeModal();
-      loadDashboard(state.view, state.unit);
+      loadDashboard(state.view);
     } else {
       alert((res && res.message) || 'Falha ao concluir baixa.');
     }
   }).checkoutLocker(lockerNum, type, unit);
 }
 
-/** ========= CONFIGURAR ARMÁRIOS ========= **/
 function showLockerSettings(){
   const content = document.getElementById('mainContent');
+  if (!content) return;
+  state.activePage = 'settings';
+  const titleEl = document.getElementById('viewTitle');
+  if (titleEl) titleEl.textContent = `Configurações de Armários${state.currentUnit ? ' · '+state.currentUnit.display : ''}`;
+  if (!state.currentUnit) {
+    content.innerHTML = '<div class="card"><h2>Configuração</h2><p>Selecione uma unidade para configurar armários.</p></div>';
+    return;
+  }
+  const unitName = state.currentUnit.name;
   content.innerHTML = `
-    <header><h1>Configurar Armários</h1></header>
-    <div style="padding:24px">
-      <div class="card" id="cfg-visitor">Carregando...</div>
-      <div id="cfg-companion"></div>
+    <div class="card">
+      <div class="card-header"><h2>Configuração de Armários – ${state.currentUnit.display}</h2></div>
+      <div class="config-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;">
+        <div class="card" style="margin:0;">
+          <h3 style="margin-top:0">Visitantes</h3>
+          <label>Linhas</label><input id="cfgVisitorRows" type="number" min="1" />
+          <label>Colunas</label><input id="cfgVisitorCols" type="number" min="1" />
+          <button class="btn-primary" type="button" onclick="saveLockerCfg('visitor')">Salvar</button>
+          <p id="cfgVisitorTotal" style="color:var(--text-muted);"></p>
+        </div>
+        <div class="card" style="margin:0;">
+          <h3 style="margin-top:0">Acompanhantes</h3>
+          <label>Linhas</label><input id="cfgCompanionRows" type="number" min="1" />
+          <label>Colunas</label><input id="cfgCompanionCols" type="number" min="1" />
+          <button class="btn-primary" type="button" onclick="saveLockerCfg('companion')">Salvar</button>
+          <p id="cfgCompanionTotal" style="color:var(--text-muted);"></p>
+        </div>
+      </div>
     </div>`;
+
   google.script.run.withSuccessHandler(cfg=>{
-    document.getElementById('cfg-visitor').innerHTML = `
-      <h2 style="margin-top:0">Visitantes</h2>
-      <label>Linhas</label><input id="rows-visitor" type="number" min="1" value="${cfg.rows}">
-      <label>Colunas</label><input id="cols-visitor" type="number" min="1" value="${cfg.cols}">
-      <button onclick="saveLockerCfg('visitor')">Salvar</button>
-      <p style="color:var(--muted);margin:6px 0 0">Total: ${cfg.rows*cfg.cols}</p>`;
-  }).getLockerConfig('visitor','');
-  google.script.run.withSuccessHandler(units=>{
-    const container = document.getElementById('cfg-companion');
-    if (!units.length){
-      container.innerHTML = '<div class="card"><h2 style="margin:0">Unidades</h2><p>Cadastre uma unidade para configurar armários.</p></div>';
-      return;
-    }
-    container.innerHTML = units.map(u=>`
-      <div class="card">
-        <h2 style="margin-top:0">${u.display}</h2>
-        <label>Linhas</label><input id="rows-${u.key}" type="number" min="1" value="0">
-        <label>Colunas</label><input id="cols-${u.key}" type="number" min="1" value="0">
-        <button onclick="saveLockerCfg('companion','${u.name.replace(/'/g,"\\'")}','${u.key}')">Salvar</button>
-        <p id="total-${u.key}" style="color:var(--muted);margin:6px 0 0"></p>
-      </div>`).join('');
-    units.forEach(u=>{
-      google.script.run.withSuccessHandler(cfg=>{
-        const rowsEl = document.getElementById(`rows-${u.key}`);
-        const colsEl = document.getElementById(`cols-${u.key}`);
-        if (rowsEl) rowsEl.value = cfg.rows;
-        if (colsEl) colsEl.value = cfg.cols;
-        const totalEl = document.getElementById(`total-${u.key}`);
-        if (totalEl) totalEl.textContent = `Total: ${cfg.rows*cfg.cols}`;
-      }).getLockerConfig('companion', u.name);
-    });
-  }).listUnits();
+    document.getElementById('cfgVisitorRows').value = cfg.rows;
+    document.getElementById('cfgVisitorCols').value = cfg.cols;
+    document.getElementById('cfgVisitorTotal').textContent = `Total: ${cfg.rows * cfg.cols}`;
+  }).getLockerConfig('visitor', unitName);
+
+  google.script.run.withSuccessHandler(cfg=>{
+    document.getElementById('cfgCompanionRows').value = cfg.rows;
+    document.getElementById('cfgCompanionCols').value = cfg.cols;
+    document.getElementById('cfgCompanionTotal').textContent = `Total: ${cfg.rows * cfg.cols}`;
+  }).getLockerConfig('companion', unitName);
 }
-function saveLockerCfg(type, unit='', key=''){
-  const rows = Number(document.getElementById(`rows-${type==='visitor'?'visitor':key}`).value);
-  const cols = Number(document.getElementById(`cols-${type==='visitor'?'visitor':key}`).value);
+
+function saveLockerCfg(type){
+  if (!state.currentUnit) return;
+  const unit = state.currentUnit.name;
+  const rows = Number(document.getElementById(type==='visitor'?'cfgVisitorRows':'cfgCompanionRows').value);
+  const cols = Number(document.getElementById(type==='visitor'?'cfgVisitorCols':'cfgCompanionCols').value);
   google.script.run.withSuccessHandler(res=>{
     if (res && res.success) {
       alert('Configuração salva!');
-      if (type==='visitor') loadDashboard('visitor'); else loadDashboard('companion', unit);
+      loadDashboard(state.view);
     } else {
       alert((res && res.message) || 'Falha ao salvar.');
     }
@@ -433,26 +1390,32 @@ function saveLockerCfg(type, unit='', key=''){
 
 function showUnitSettings(){
   const content = document.getElementById('mainContent');
+  if (!content) return;
+  state.activePage = 'units';
+  const titleEl = document.getElementById('viewTitle');
+  if (titleEl) titleEl.textContent = 'Administração · Unidades';
   content.innerHTML = `
-    <header><h1>Unidades</h1></header>
-    <div style="padding:24px">
-      <div class="card">
-        <h2 style="margin-top:0">Cadastrar unidade</h2>
+    <div class="card">
+      <div class="card-header"><h2>Unidades</h2></div>
+      <div class="card" style="margin:0 0 20px;">
+        <h3 style="margin-top:0">Cadastrar unidade</h3>
         <label>Nome interno</label><input id="unit_name" placeholder="Ex: NAC" />
         <label>Nome exibido</label><input id="unit_display" placeholder="Ex: Núcleo de Atendimento" />
-        <button onclick="addUnitUI()">Adicionar</button>
+        <button class="btn-primary" type="button" onclick="addUnitUI()">Adicionar</button>
       </div>
-      <div class="card">
-        <h2 style="margin-top:0">Unidades ativas</h2>
+      <div class="card" style="margin:0;">
+        <h3 style="margin-top:0">Unidades ativas</h3>
         <div id="unitList">Carregando...</div>
       </div>
     </div>`;
+
   google.script.run.withSuccessHandler(units=>{
     const list = document.getElementById('unitList');
     if (!units.length){ list.innerHTML = '<i>Nenhuma unidade cadastrada.</i>'; return; }
-    list.innerHTML = `<table><thead><tr><th>Nome</th><th>Exibição</th><th></th></tr></thead><tbody>${units.map(u=>`<tr><td>${u.name}</td><td>${u.display}</td><td><button class="secondary" onclick="removeUnitUI('${u.name.replace(/'/g,"\\'")}')">Desativar</button></td></tr>`).join('')}</tbody></table>`;
+    list.innerHTML = `<table><thead><tr><th>Nome</th><th>Exibição</th><th></th></tr></thead><tbody>${units.map(u=>`<tr><td>${u.name}</td><td>${u.display}</td><td style="text-align:right"><button class="btn-secondary" onclick="removeUnitUI('${u.name.replace(/'/g,"\\'")}')">Desativar</button></td></tr>`).join('')}</tbody></table>`;
   }).listUnits();
 }
+
 function addUnitUI(){
   const name = document.getElementById('unit_name').value.trim();
   const display = document.getElementById('unit_display').value.trim();
@@ -460,34 +1423,36 @@ function addUnitUI(){
   google.script.run.withSuccessHandler(res=>{
     if (res && res.success){
       alert('Unidade salva!');
-      refreshUnitsMenu();
-      showUnitSettings();
+      loadUnitsAndStart(false, showUnitSettings);
     } else {
       alert((res && res.message) || 'Falha ao salvar unidade.');
     }
   }).addUnit(name, display);
 }
+
 function removeUnitUI(name){
   if (!confirm(`Desativar a unidade ${name}?`)) return;
   google.script.run.withSuccessHandler(res=>{
     if (res && res.success){
       alert('Unidade desativada.');
-      refreshUnitsMenu();
-      showUnitSettings();
+      loadUnitsAndStart(false, showUnitSettings);
     } else {
       alert((res && res.message) || 'Falha ao desativar.');
     }
   }).removeUnit(name);
 }
 
-/** ========= USUÁRIOS ========= **/
 function showUsers(){
   const content = document.getElementById('mainContent');
+  if (!content) return;
+  state.activePage = 'users';
+  const titleEl = document.getElementById('viewTitle');
+  if (titleEl) titleEl.textContent = 'Administração · Usuários';
+  const unitOptions = (state.units || []).map(u=>`<option value="${u.name.replace(/"/g,'&quot;')}">${u.display}</option>`).join('');
   content.innerHTML = `
     <div class="card">
-      <h2>Usuários</h2>
-      <div id="usersArea">Carregando...</div>
-      <div class="card" style="margin-top:12px">
+      <div class="card-header"><h2>Usuários</h2></div>
+      <div class="card" style="margin:0 0 20px;">
         <h3 style="margin-top:0">Adicionar Usuário</h3>
         <label>Usuário</label><input id="u_username">
         <label>Senha</label><input id="u_password" type="password">
@@ -498,33 +1463,44 @@ function showUsers(){
           <option value="armario_visitante">Armário Visitante</option>
           <option value="guarda_volume">Guarda Volume</option>
         </select>
-        <button onclick="addUserUI()">Adicionar</button>
+        <label>Unidade</label>
+        <select id="u_unit">
+          <option value="">-- Selecionar --</option>
+          ${unitOptions}
+        </select>
+        <button class="btn-primary" type="button" onclick="addUserUI()">Adicionar</button>
+      </div>
+      <div class="card" style="margin:0;">
+        <h3 style="margin-top:0">Usuários cadastrados</h3>
+        <div id="usersArea">Carregando...</div>
       </div>
     </div>`;
+
   google.script.run.withSuccessHandler(rows=>{
-    const tbl = ['<table><thead><tr><th>Usuário</th><th>Perfil</th><th>Email</th><th>Ações</th></tr></thead><tbody>'];
+    const tbl = ['<table><thead><tr><th>Usuário</th><th>Perfil</th><th>Email</th><th>Unidade</th><th style="text-align:right">Ações</th></tr></thead><tbody>'];
     rows.slice(1).forEach(r=>{
-      const u=r[0], p=r[2], e=r[3];
-      tbl.push(`<tr><td>${u}</td><td>${p}</td><td>${e||''}</td><td>
-        <button onclick="resetPassUI('${u}')">Reset Senha</button>
-        <button style="background:#dc3545" onclick="deleteUserUI('${u}')">Excluir</button>
-      </td></tr>`);
+      const u=r[0], p=r[2], e=r[3], unit=r[4] || '';
+      tbl.push(`<tr><td>${u}</td><td>${p}</td><td>${e||''}</td><td>${unit||'-'}</td><td style="text-align:right;display:flex;gap:8px;justify-content:flex-end;"><button class="btn-secondary" onclick="resetPassUI('${u}')">Reset Senha</button><button class="btn-danger" onclick="deleteUserUI('${u}')">Excluir</button></td></tr>`);
     });
     tbl.push('</tbody></table>');
     document.getElementById('usersArea').innerHTML = tbl.join('');
   }).listUsers();
 }
+
 function addUserUI(){
   const u=document.getElementById('u_username').value.trim();
   const p=document.getElementById('u_password').value;
   const e=document.getElementById('u_email').value.trim();
   const pr=document.getElementById('u_profile').value;
+  const unit=document.getElementById('u_unit').value;
   if(!u||!p){ alert('Usuário e senha são obrigatórios.'); return; }
+  if(!unit){ alert('Selecione a unidade do usuário.'); return; }
   google.script.run.withSuccessHandler(res=>{
     if(res && res.success){ alert('Usuário adicionado.'); showUsers(); }
     else alert((res && res.message) || 'Falha ao adicionar.');
-  }).addUser(u,p,pr,e);
+  }).addUser(u,p,pr,e,unit);
 }
+
 function resetPassUI(u){
   const np = prompt(`Nova senha para ${u}:`);
   if(!np) return;
@@ -533,6 +1509,7 @@ function resetPassUI(u){
     else alert((res && res.message) || 'Falha ao atualizar senha.');
   }).resetPassword(u,np);
 }
+
 function deleteUserUI(u){
   if(!confirm(`Excluir usuário ${u}?`)) return;
   google.script.run.withSuccessHandler(res=>{
@@ -541,31 +1518,35 @@ function deleteUserUI(u){
   }).deleteUser(u);
 }
 
-/** ========= RELATÓRIOS ========= **/
 function showReports(){
   const content = document.getElementById('mainContent');
+  if (!content) return;
+  state.activePage = 'reports';
+  const titleEl = document.getElementById('viewTitle');
+  if (titleEl) titleEl.textContent = 'Relatórios';
   content.innerHTML = `
     <div class="card">
-      <h2>Relatórios</h2>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
-        <div class="card" style="margin:0">
+      <div class="card-header"><h2>Relatórios</h2></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:20px;">
+        <div class="card" style="margin:0;">
           <h3 style="margin-top:0">Visitantes</h3>
-          <button onclick="downloadCSV('visitor')">Baixar CSV</button>
+          <button class="btn-primary" type="button" onclick="downloadCSV('visitor')">Baixar CSV</button>
         </div>
-        <div class="card" style="margin:0">
+        <div class="card" style="margin:0;">
           <h3 style="margin-top:0">Acompanhantes</h3>
-          <button onclick="downloadCSV('companion')">Baixar CSV</button>
+          <button class="btn-primary" type="button" onclick="downloadCSV('companion')">Baixar CSV</button>
         </div>
       </div>
-      <div class="card" style="margin-top:12px">
+      <div class="card" style="margin:0 0 20px;">
         <h3 style="margin-top:0">Registros Recentes (Visitantes)</h3>
         <div id="regsV">Carregando...</div>
       </div>
-      <div class="card" style="margin-top:12px">
+      <div class="card" style="margin:0;">
         <h3 style="margin-top:0">Registros Recentes (Acompanhantes)</h3>
         <div id="regsC">Carregando...</div>
       </div>
     </div>`;
+
   google.script.run.withSuccessHandler(rows=>{
     document.getElementById('regsV').innerHTML = renderTable(rows);
   }).getRegistrations('visitor');
@@ -573,12 +1554,14 @@ function showReports(){
     document.getElementById('regsC').innerHTML = renderTable(rows);
   }).getRegistrations('companion');
 }
+
 function renderTable(rows){
   if(!rows || rows.length<=1) return '<i>Sem dados</i>';
   const head = rows[0].map(h=>`<th>${h}</th>`).join('');
   const body = rows.slice(1).map(r=>`<tr>${r.map(v=>`<td>${(v===null||v===undefined)?'':v}</td>`).join('')}</tr>`).join('');
   return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
 }
+
 function downloadCSV(type){
   google.script.run.withSuccessHandler(csv=>{
     const uri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
@@ -591,10 +1574,13 @@ function downloadCSV(type){
   }).exportReport(type);
 }
 
-/** ========= AUDITORIA ========= **/
 function showAudit(){
   const content = document.getElementById('mainContent');
-  content.innerHTML = `<div class="card"><h2>Auditoria</h2><div id="auditArea">Carregando...</div></div>`;
+  if (!content) return;
+  state.activePage = 'audit';
+  const titleEl = document.getElementById('viewTitle');
+  if (titleEl) titleEl.textContent = 'Auditoria';
+  content.innerHTML = `<div class="card"><div class="card-header"><h2>Auditoria</h2></div><div id="auditArea">Carregando...</div></div>`;
   google.script.run.withSuccessHandler(rows=>{
     document.getElementById('auditArea').innerHTML = renderTable(rows);
   }).getAuditLog();
