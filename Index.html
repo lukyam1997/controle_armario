@@ -574,6 +574,11 @@
       border: 1px solid var(--border);
     }
 
+    .single-toggle {
+      display: inline-flex;
+      align-items: center;
+    }
+
     .toggle-group .toggle {
       border: none;
       padding: 10px 18px;
@@ -1105,7 +1110,8 @@ const state = {
   dashboardFilters: { status: 'all', query: '' },
   reportFilters: { type: 'all', action: 'all', status: 'all', units: [], start: '', end: '', query: '' },
   indicatorFilters: { type: 'all', units: [], days: 30 },
-  lockerCache: { type: null, unit: null, rows: null }
+  lockerCache: { type: null, unit: null, rows: null },
+  allowedViews: ['visitor', 'companion']
 };
 
 let audioCtx = null;
@@ -1194,6 +1200,31 @@ const PROFILES = {
   COMPANION: 'guarda_volume',
 };
 
+function determineAllowedDashboardViews(profile){
+  switch (profile) {
+    case PROFILES.VISITOR:
+      return ['visitor'];
+    case PROFILES.COMPANION:
+      return ['companion'];
+    default:
+      return ['visitor', 'companion'];
+  }
+}
+
+function getAllowedViews(){
+  if (Array.isArray(state.allowedViews) && state.allowedViews.length) {
+    return state.allowedViews;
+  }
+  const profile = state.user && state.user.profile;
+  return determineAllowedDashboardViews(profile);
+}
+
+function ensureValidView(view){
+  const allowed = getAllowedViews();
+  if (allowed.includes(view)) return view;
+  return allowed[0] || 'visitor';
+}
+
 function toggleTheme(){
   playSound('click');
   state.theme = state.theme === 'light' ? 'dark' : 'light';
@@ -1267,7 +1298,10 @@ function submitLogin(e){
 function setupAfterLogin(user){
   const units = Array.isArray(user.units) ? user.units : (user.defaultUnit ? [user.defaultUnit] : (user.unit ? [user.unit] : []));
   state.user = Object.assign({}, user, { units });
-  state.view = 'visitor';
+  state.allowedViews = determineAllowedDashboardViews(user.profile);
+  const defaultView = user.profile === PROFILES.COMPANION ? 'companion' : 'visitor';
+  const allowed = state.allowedViews;
+  state.view = allowed.includes(defaultView) ? defaultView : (allowed[0] || 'visitor');
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   updateThemeButtons();
@@ -1289,6 +1323,7 @@ function renderUserChip(){
 function handleLogout(){
   playSound('click');
   state.user = null;
+  state.view = 'visitor';
   state.units = [];
   state.currentUnit = null;
   state.availableUnits = [];
@@ -1298,6 +1333,7 @@ function handleLogout(){
   state.reportFilters = { type: 'all', action: 'all', status: 'all', units: [], start: '', end: '', query: '' };
   state.indicatorFilters = { type: 'all', units: [], days: 30 };
   state.lockerCache = { type: null, unit: null, rows: null };
+  state.allowedViews = ['visitor', 'companion'];
   document.getElementById('app').style.display = 'none';
   document.getElementById('loginPage').style.display = 'flex';
   document.getElementById('loginForm').reset();
@@ -1455,9 +1491,14 @@ function goToCurrentPage(){
 }
 
 function updateNavigation(){
+  const allowed = getAllowedViews();
   const buttons = document.querySelectorAll('.nav-item');
   buttons.forEach(btn=>{
-    if (btn.dataset.view === state.view) btn.classList.add('active');
+    const view = btn.dataset.view;
+    if (view === 'visitor' || view === 'companion') {
+      btn.style.display = allowed.includes(view) ? '' : 'none';
+    }
+    if (view === state.view) btn.classList.add('active');
     else btn.classList.remove('active');
   });
   let title;
@@ -1471,7 +1512,8 @@ function updateNavigation(){
 }
 
 function loadDashboard(type){
-  state.view = type;
+  const nextView = ensureValidView(type);
+  state.view = nextView;
   state.activePage = 'dashboard';
   updateNavigation();
   const content = document.getElementById('mainContent');
@@ -1482,6 +1524,20 @@ function loadDashboard(type){
     content.innerHTML = '<div class="card"><h2>Selecione uma unidade</h2><p>Para visualizar os armários, escolha uma unidade ativa.</p></div>';
     return;
   }
+  const allowedViews = getAllowedViews();
+  const hasMultipleViews = allowedViews.length > 1;
+  const toggleButtons = hasMultipleViews
+    ? allowedViews.map(view => {
+        const label = view === 'visitor' ? 'Visitantes' : 'Acompanhantes';
+        const active = state.view === view ? 'active' : '';
+        return `<button class="toggle ${active}" type="button" onclick="switchDashboardScope('${view}')">${label}</button>`;
+      }).join('')
+    : (allowedViews.length === 1
+        ? `<span class="tag">${allowedViews[0] === 'visitor' ? 'Visitantes' : 'Acompanhantes'}</span>`
+        : '<span class="tag muted">Nenhum perfil disponível</span>');
+  const toggleMarkup = hasMultipleViews
+    ? `<div class="toggle-group">${toggleButtons}</div>`
+    : `<div class="single-toggle">${toggleButtons}</div>`;
   const status = state.dashboardFilters.status || 'all';
   const queryValue = (state.dashboardFilters.query || '').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   content.innerHTML = `
@@ -1500,10 +1556,7 @@ function loadDashboard(type){
         <div class="dashboard-controls">
           <div class="control">
             <label>Perfil monitorado</label>
-            <div class="toggle-group">
-              <button class="toggle ${state.view === 'visitor' ? 'active' : ''}" type="button" onclick="switchDashboardScope('visitor')">Visitantes</button>
-              <button class="toggle ${state.view === 'companion' ? 'active' : ''}" type="button" onclick="switchDashboardScope('companion')">Acompanhantes</button>
-            </div>
+            ${toggleMarkup}
           </div>
           <div class="control">
             <label>Status</label>
@@ -1538,8 +1591,9 @@ function loadDashboard(type){
     const el = document.getElementById(id);
     if (el) el.textContent = '—';
   });
-  renderLockers(type, unitName);
-  loadStats(type, unitName);
+  const currentView = state.view;
+  renderLockers(currentView, unitName);
+  loadStats(currentView, unitName);
 }
 
 function refreshCurrentView(){
@@ -1548,7 +1602,8 @@ function refreshCurrentView(){
 }
 
 function switchDashboardScope(scope){
-  if (!scope || state.view === scope) return;
+  const allowed = getAllowedViews();
+  if (!scope || !allowed.includes(scope) || state.view === scope) return;
   playSound('click');
   loadDashboard(scope);
 }
