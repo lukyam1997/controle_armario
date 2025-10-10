@@ -1940,11 +1940,24 @@ function applyDashboardFilters(){
 }
 
 function renderLockers(type, unit){
-  google.script.run.withSuccessHandler(rows=>{
-    if (!state.currentUnit || state.currentUnit.name !== unit) return;
-    state.lockerCache = { profile: type, unit, rows };
-    renderLockerGrid(rows, type, unit);
-  }).getLockersData(type, unit);
+  google.script.run
+    .withSuccessHandler(rows=>{
+      if (!state.currentUnit || state.currentUnit.name !== unit) return;
+      state.lockerCache = { profile: type, unit, rows };
+      renderLockerGrid(rows, type, unit);
+    })
+    .withFailureHandler(err => {
+      console.error('Erro ao carregar lockers:', err);
+      const grid = document.getElementById('grid');
+      if (grid) {
+        const message = err && err.message ? String(err.message) : 'Tente novamente em instantes.';
+        const sanitized = message.replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] || c));
+        grid.innerHTML = `<div class="empty-state">Erro ao carregar armários: ${sanitized} <button type="button" onclick="refreshCurrentView()">Tentar novamente</button></div>`;
+      }
+      state.notifications = [];
+      updateNotificationBell();
+    })
+    .getLockersData(type, unit);
 }
 
 function renderLockerGrid(rows, type, unit){
@@ -1952,7 +1965,7 @@ function renderLockerGrid(rows, type, unit){
   if (!grid) return;
   const allRows = Array.isArray(rows) ? rows : [];
   if (!allRows.length){
-    grid.innerHTML = '<div class="empty-state">Nenhum armário configurado para o perfil selecionado.</div>';
+    grid.innerHTML = '<div class="empty-state">Nenhum armário configurado para o perfil selecionado. <button type="button" onclick="refreshCurrentView()">Tentar novamente</button></div>';
     state.notifications = [];
     updateNotificationBell();
     return;
@@ -1980,7 +1993,7 @@ function renderLockerGrid(rows, type, unit){
     return row.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== '');
   });
   if (!dataRows.length){
-    grid.innerHTML = '<div class="empty-state">Nenhum armário configurado para o perfil selecionado.</div>';
+    grid.innerHTML = '<div class="empty-state">Nenhum armário configurado para o perfil selecionado. <button type="button" onclick="refreshCurrentView()">Tentar novamente</button></div>';
     state.notifications = [];
     updateNotificationBell();
     return;
