@@ -105,10 +105,10 @@
     }
 
     .login-logo {
-      width: 72px;
+      width: 140px;
       height: 72px;
       border-radius: 16px;
-      object-fit: cover;
+      object-fit: contain;
       background: #fff;
       box-shadow: var(--shadow);
       padding: 6px;
@@ -238,13 +238,13 @@
     }
 
     .sidebar-logo img {
-      width: 48px;
-      height: 48px;
+      width: 140px;
+      height: 72px;
       border-radius: 14px;
-      object-fit: cover;
+      object-fit: contain;
       background: #fff;
       box-shadow: var(--shadow);
-      padding: 4px;
+      padding: 6px;
     }
 
     .sidebar .theme-switch.small {
@@ -349,6 +349,12 @@
       gap: 12px;
     }
 
+    .topbar-chips {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
     #viewTitle {
       margin: 0;
       font-size: 1.4rem;
@@ -379,6 +385,74 @@
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
+    }
+
+    .selector-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .selector-block {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 220px;
+    }
+
+    .selector-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .profile-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .profile-selector:empty::after {
+      content: 'Nenhum perfil disponível';
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .profile-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      box-shadow: 0 12px 30px rgba(15,23,42,0.08);
+    }
+
+    .profile-pill:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .profile-pill.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 18px 34px rgba(37,99,235,0.32);
+    }
+
+    .profile-pill[disabled],
+    .profile-pill[aria-disabled="true"] {
+      cursor: default;
+      opacity: 0.75;
+      transform: none;
+      box-shadow: none;
     }
 
     .unit-selector:empty::after {
@@ -565,37 +639,6 @@
       min-width: 180px;
     }
 
-    .toggle-group {
-      display: inline-flex;
-      gap: 8px;
-      padding: 4px;
-      border-radius: 14px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-    }
-
-    .single-toggle {
-      display: inline-flex;
-      align-items: center;
-    }
-
-    .toggle-group .toggle {
-      border: none;
-      padding: 10px 18px;
-      border-radius: 12px;
-      background: transparent;
-      color: var(--text);
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s ease, color 0.2s ease;
-    }
-
-    .toggle-group .toggle.active {
-      background: var(--primary);
-      color: #fff;
-      box-shadow: 0 10px 22px rgba(37,99,235,0.28);
-    }
-
     .tag {
       display: inline-flex;
       align-items: center;
@@ -611,6 +654,13 @@
     .tag.muted {
       color: var(--text-muted);
       background: transparent;
+    }
+
+    .tag.accent {
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 14px 30px rgba(37,99,235,0.28);
     }
 
     .checkbox-grid {
@@ -1005,6 +1055,19 @@
       .unit-selector .unit-pill {
         flex: 1 1 auto;
       }
+      .profile-selector {
+        width: 100%;
+      }
+      .profile-selector .profile-pill {
+        flex: 1 1 auto;
+        justify-content: center;
+      }
+      .selector-row {
+        flex-direction: column;
+      }
+      .selector-block {
+        width: 100%;
+      }
       .topbar-actions {
         width: 100%;
         justify-content: space-between;
@@ -1050,9 +1113,8 @@
       <nav class="sidebar-nav">
         <div class="sidebar-section">
           <span class="section-title">Visão geral</span>
-          <button class="nav-item" data-view="visitor" onclick="playSound('click');loadDashboard('visitor')">👥 Armários Visitantes</button>
-          <button class="nav-item" data-view="companion" onclick="playSound('click');loadDashboard('companion')">🧳 Armários Acompanhantes</button>
-          <button class="nav-item" data-view="indicators" onclick="playSound('click');showIndicators()">📈 Indicadores</button>
+          <button class="nav-item" data-page="dashboard" onclick="goToPage('dashboard')">👥 Monitor de Armários</button>
+          <button class="nav-item" data-page="indicators" onclick="goToPage('indicators')">📈 Indicadores</button>
         </div>
         <div id="adminSection" class="sidebar-section" style="display:none;">
           <span class="section-title">Administração</span>
@@ -1070,9 +1132,21 @@
         <div class="topbar-left">
           <div class="topbar-title-row">
             <h1 id="viewTitle">Painel</h1>
-            <span id="currentUnitLabel" class="current-unit">Selecione uma unidade</span>
+            <div class="topbar-chips">
+              <span id="currentProfileLabel" class="current-unit">Perfil · Visitantes</span>
+              <span id="currentUnitLabel" class="current-unit">Selecione uma unidade</span>
+            </div>
           </div>
-          <div class="unit-selector" id="unitSelector"></div>
+          <div class="selector-row">
+            <div class="selector-block">
+              <span class="selector-label">Unidades disponíveis</span>
+              <div class="unit-selector" id="unitSelector"></div>
+            </div>
+            <div class="selector-block">
+              <span class="selector-label">Perfil monitorado</span>
+              <div class="profile-selector" id="profileSelector"></div>
+            </div>
+          </div>
         </div>
         <div class="topbar-actions">
           <button id="headerThemeToggle" class="icon-button" type="button" onclick="toggleTheme()">🌙</button>
@@ -1100,7 +1174,7 @@ document.body.setAttribute('data-theme', savedTheme);
 
 const state = {
   user: null,
-  view: 'visitor',
+  profile: 'visitor',
   currentUnit: null,
   units: [],
   availableUnits: [],
@@ -1108,9 +1182,9 @@ const state = {
   theme: savedTheme,
   activePage: 'dashboard',
   dashboardFilters: { status: 'all', query: '' },
-  reportFilters: { type: 'all', action: 'all', status: 'all', units: [], start: '', end: '', query: '' },
-  indicatorFilters: { type: 'all', units: [], days: 30 },
-  lockerCache: { type: null, unit: null, rows: null },
+  reportFilters: { action: 'all', status: 'all', units: [], start: '', end: '', query: '' },
+  indicatorFilters: { units: [], days: 30 },
+  lockerCache: { profile: null, unit: null, rows: null },
   allowedViews: ['visitor', 'companion']
 };
 
@@ -1118,30 +1192,30 @@ let audioCtx = null;
 let audioReady = false;
 const SOUND_LIBRARY = {
   click: [
-    { freq: 420, duration: 0.08, type: 'square', volume: 0.16 },
-    { freq: 640, duration: 0.06, type: 'triangle', volume: 0.12, delay: 0.08 }
+    { freq: 260, duration: 0.08, type: 'sine', volume: 0.08 },
+    { freq: 340, duration: 0.06, type: 'sine', volume: 0.06, delay: 0.08 }
   ],
   success: [
-    { freq: 520, duration: 0.12, type: 'sine', volume: 0.14 },
-    { freq: 720, duration: 0.14, type: 'triangle', volume: 0.12, delay: 0.1 },
-    { freq: 880, duration: 0.16, type: 'sine', volume: 0.1, delay: 0.24 }
+    { freq: 420, duration: 0.18, type: 'sine', volume: 0.09 },
+    { freq: 520, duration: 0.16, type: 'sine', volume: 0.08, delay: 0.12 },
+    { freq: 660, duration: 0.14, type: 'triangle', volume: 0.06, delay: 0.26 }
   ],
   error: [
-    { freq: 200, duration: 0.22, type: 'sawtooth', volume: 0.22 },
-    { freq: 140, duration: 0.18, type: 'triangle', volume: 0.16, delay: 0.22 }
+    { freq: 200, duration: 0.26, type: 'sine', volume: 0.14 },
+    { freq: 160, duration: 0.22, type: 'sine', volume: 0.12, delay: 0.12 }
   ],
   modal: [
-    { freq: 560, duration: 0.12, type: 'triangle', volume: 0.12 },
-    { freq: 430, duration: 0.1, type: 'sine', volume: 0.1, delay: 0.14 }
+    { freq: 320, duration: 0.18, type: 'sine', volume: 0.08 },
+    { freq: 420, duration: 0.14, type: 'triangle', volume: 0.06, delay: 0.12 }
   ],
   notice: [
-    { freq: 640, duration: 0.14, type: 'sine', volume: 0.12 },
-    { freq: 860, duration: 0.14, type: 'square', volume: 0.1, delay: 0.16 }
+    { freq: 360, duration: 0.16, type: 'sine', volume: 0.08 },
+    { freq: 500, duration: 0.14, type: 'sine', volume: 0.06, delay: 0.12 }
   ],
   insight: [
-    { freq: 480, duration: 0.16, type: 'triangle', volume: 0.14 },
-    { freq: 720, duration: 0.12, type: 'sine', volume: 0.12, delay: 0.18 },
-    { freq: 960, duration: 0.18, type: 'triangle', volume: 0.1, delay: 0.32 }
+    { freq: 360, duration: 0.2, type: 'sine', volume: 0.08 },
+    { freq: 480, duration: 0.18, type: 'triangle', volume: 0.07, delay: 0.14 },
+    { freq: 600, duration: 0.18, type: 'sine', volume: 0.06, delay: 0.3 }
   ]
 };
 
@@ -1200,7 +1274,7 @@ const PROFILES = {
   COMPANION: 'guarda_volume',
 };
 
-function determineAllowedDashboardViews(profile){
+function determineAllowedProfiles(profile){
   switch (profile) {
     case PROFILES.VISITOR:
       return ['visitor'];
@@ -1211,17 +1285,17 @@ function determineAllowedDashboardViews(profile){
   }
 }
 
-function getAllowedViews(){
+function getAllowedProfiles(){
   if (Array.isArray(state.allowedViews) && state.allowedViews.length) {
     return state.allowedViews;
   }
   const profile = state.user && state.user.profile;
-  return determineAllowedDashboardViews(profile);
+  return determineAllowedProfiles(profile);
 }
 
-function ensureValidView(view){
-  const allowed = getAllowedViews();
-  if (allowed.includes(view)) return view;
+function ensureValidProfile(profile){
+  const allowed = getAllowedProfiles();
+  if (allowed.includes(profile)) return profile;
   return allowed[0] || 'visitor';
 }
 
@@ -1298,17 +1372,19 @@ function submitLogin(e){
 function setupAfterLogin(user){
   const units = Array.isArray(user.units) ? user.units : (user.defaultUnit ? [user.defaultUnit] : (user.unit ? [user.unit] : []));
   state.user = Object.assign({}, user, { units });
-  state.allowedViews = determineAllowedDashboardViews(user.profile);
-  const defaultView = user.profile === PROFILES.COMPANION ? 'companion' : 'visitor';
-  const allowed = state.allowedViews;
-  state.view = allowed.includes(defaultView) ? defaultView : (allowed[0] || 'visitor');
+  state.allowedViews = determineAllowedProfiles(user.profile);
+  const defaultProfile = user.profile === PROFILES.COMPANION ? 'companion' : 'visitor';
+  state.profile = ensureValidProfile(defaultProfile);
+  state.activePage = 'dashboard';
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   updateThemeButtons();
   renderUserChip();
   state.dashboardFilters = { status: 'all', query: '' };
-  state.reportFilters = { type: 'all', action: 'all', status: 'all', units: units.slice(), start: '', end: '', query: '' };
-  state.indicatorFilters = { type: 'all', units: units.slice(), days: 30 };
+  state.reportFilters = { action: 'all', status: 'all', units: units.slice(), start: '', end: '', query: '' };
+  state.indicatorFilters = { units: units.slice(), days: 30 };
+  state.lockerCache = { profile: null, unit: null, rows: null };
+  updateProfileSelector();
   loadUnitsAndStart(true);
 }
 
@@ -1323,16 +1399,16 @@ function renderUserChip(){
 function handleLogout(){
   playSound('click');
   state.user = null;
-  state.view = 'visitor';
+  state.profile = 'visitor';
   state.units = [];
   state.currentUnit = null;
   state.availableUnits = [];
   state.notifications = [];
   state.activePage = 'dashboard';
   state.dashboardFilters = { status: 'all', query: '' };
-  state.reportFilters = { type: 'all', action: 'all', status: 'all', units: [], start: '', end: '', query: '' };
-  state.indicatorFilters = { type: 'all', units: [], days: 30 };
-  state.lockerCache = { type: null, unit: null, rows: null };
+  state.reportFilters = { action: 'all', status: 'all', units: [], start: '', end: '', query: '' };
+  state.indicatorFilters = { units: [], days: 30 };
+  state.lockerCache = { profile: null, unit: null, rows: null };
   state.allowedViews = ['visitor', 'companion'];
   document.getElementById('app').style.display = 'none';
   document.getElementById('loginPage').style.display = 'flex';
@@ -1341,6 +1417,8 @@ function handleLogout(){
   updateThemeButtons();
   updateNotificationBell();
   updateUnitSelector();
+  updateProfileSelector();
+  updateNavigation();
 }
 
 function showError(elId, msg){
@@ -1390,9 +1468,10 @@ function loadUnitsAndStart(reloadDashboard = true, callback){
     updateAdminVisibility();
     updateUnitSelector();
     updateNavigation();
+    updateProfileSelector();
 
     if (reloadDashboard) {
-      loadDashboard(state.view || 'visitor');
+      loadDashboard(state.profile || 'visitor');
     } else if (typeof callback === 'function') {
       callback();
     }
@@ -1417,17 +1496,53 @@ function updateAdminVisibility(){
 }
 
 function updateUnitSelector(){
-  const label = document.getElementById('currentUnitLabel');
-  if (label) {
+  updateContextChips();
+  refreshUnitsMenu();
+}
+
+function updateProfileSelector(){
+  const container = document.getElementById('profileSelector');
+  if (!container) return;
+  const allowed = getAllowedProfiles();
+  if (!allowed.length) {
+    container.innerHTML = '';
+    updateContextChips();
+    return;
+  }
+  const disableSelection = allowed.length === 1;
+  container.innerHTML = allowed.map(profile=>{
+    const isActive = state.profile === profile;
+    const label = profile === 'companion' ? 'Acompanhantes' : 'Visitantes';
+    const disabledAttr = disableSelection && isActive ? 'disabled aria-disabled="true"' : '';
+    const action = disabledAttr ? '' : `onclick="changeProfile('${profile}')"`;
+    return `<button class="profile-pill ${isActive ? 'active' : ''}" type="button" ${disabledAttr} ${action}>${label}</button>`;
+  }).join('');
+  updateContextChips();
+}
+
+function updateContextChips(){
+  const unitLabel = document.getElementById('currentUnitLabel');
+  if (unitLabel) {
     if (state.currentUnit) {
-      label.textContent = `Unidade · ${state.currentUnit.display}`;
-      label.classList.add('has-value');
+      unitLabel.textContent = `Unidade · ${state.currentUnit.display}`;
+      unitLabel.classList.add('has-value');
     } else {
-      label.textContent = 'Selecione uma unidade';
-      label.classList.remove('has-value');
+      unitLabel.textContent = 'Selecione uma unidade';
+      unitLabel.classList.remove('has-value');
     }
   }
-  refreshUnitsMenu();
+  const profileLabel = document.getElementById('currentProfileLabel');
+  if (profileLabel) {
+    const allowed = getAllowedProfiles();
+    if (!allowed.length) {
+      profileLabel.textContent = 'Perfil indisponível';
+      profileLabel.classList.remove('has-value');
+    } else {
+      const label = state.profile === 'companion' ? 'Acompanhantes' : 'Visitantes';
+      profileLabel.textContent = `Perfil · ${label}`;
+      profileLabel.classList.add('has-value');
+    }
+  }
 }
 
 function handleUnitChange(name){
@@ -1457,15 +1572,36 @@ function changeUnit(name){
   if (!unit) return;
   playSound('click');
   state.currentUnit = unit;
-  state.lockerCache = { type: null, unit: null, rows: null };
+  state.lockerCache = { profile: null, unit: null, rows: null };
   updateUnitSelector();
   goToCurrentPage();
+}
+
+function changeProfile(profile){
+  const allowed = getAllowedProfiles();
+  if (!profile || !allowed.includes(profile) || state.profile === profile) return;
+  playSound('click');
+  state.profile = profile;
+  state.lockerCache = { profile: null, unit: null, rows: null };
+  updateProfileSelector();
+  updateNavigation();
+  goToCurrentPage();
+}
+
+function goToPage(page){
+  if (!page) return;
+  playSound('click');
+  if (page === 'dashboard') {
+    loadDashboard();
+  } else if (page === 'indicators') {
+    showIndicators();
+  }
 }
 
 function goToCurrentPage(){
   switch (state.activePage) {
     case 'dashboard':
-      loadDashboard(state.view);
+      loadDashboard();
       break;
     case 'settings':
       showLockerSettings();
@@ -1486,35 +1622,35 @@ function goToCurrentPage(){
       showIndicators();
       break;
     default:
-      loadDashboard(state.view);
+      loadDashboard();
   }
 }
 
 function updateNavigation(){
-  const allowed = getAllowedViews();
+  const allowed = getAllowedProfiles();
   const buttons = document.querySelectorAll('.nav-item');
   buttons.forEach(btn=>{
-    const view = btn.dataset.view;
-    if (view === 'visitor' || view === 'companion') {
-      btn.style.display = allowed.includes(view) ? '' : 'none';
+    const page = btn.dataset.page;
+    if (page === 'dashboard') {
+      btn.style.display = allowed.length ? '' : 'none';
     }
-    if (view === state.view) btn.classList.add('active');
+    if (page === state.activePage) btn.classList.add('active');
     else btn.classList.remove('active');
   });
-  let title;
-  if (state.view === 'visitor') title = 'Armários de Visitantes';
-  else if (state.view === 'companion') title = 'Armários de Acompanhantes';
-  else if (state.view === 'indicators') title = 'Indicadores Operacionais';
-  else title = 'Painel';
-  const unitLabel = state.currentUnit ? ` · ${state.currentUnit.display}` : '';
-  const titleEl = document.getElementById('viewTitle');
-  if (titleEl) titleEl.textContent = title + (state.view === 'indicators' ? '' : unitLabel);
+  if (state.activePage === 'dashboard') {
+    const titleEl = document.getElementById('viewTitle');
+    if (titleEl) {
+      const title = state.profile === 'companion' ? 'Armários de Acompanhantes' : 'Armários de Visitantes';
+      titleEl.textContent = title;
+    }
+  }
 }
 
-function loadDashboard(type){
-  const nextView = ensureValidView(type);
-  state.view = nextView;
+function loadDashboard(profile){
+  const nextProfile = ensureValidProfile(profile || state.profile);
+  state.profile = nextProfile;
   state.activePage = 'dashboard';
+  updateProfileSelector();
   updateNavigation();
   const content = document.getElementById('mainContent');
   if (!content) return;
@@ -1524,20 +1660,7 @@ function loadDashboard(type){
     content.innerHTML = '<div class="card"><h2>Selecione uma unidade</h2><p>Para visualizar os armários, escolha uma unidade ativa.</p></div>';
     return;
   }
-  const allowedViews = getAllowedViews();
-  const hasMultipleViews = allowedViews.length > 1;
-  const toggleButtons = hasMultipleViews
-    ? allowedViews.map(view => {
-        const label = view === 'visitor' ? 'Visitantes' : 'Acompanhantes';
-        const active = state.view === view ? 'active' : '';
-        return `<button class="toggle ${active}" type="button" onclick="switchDashboardScope('${view}')">${label}</button>`;
-      }).join('')
-    : (allowedViews.length === 1
-        ? `<span class="tag">${allowedViews[0] === 'visitor' ? 'Visitantes' : 'Acompanhantes'}</span>`
-        : '<span class="tag muted">Nenhum perfil disponível</span>');
-  const toggleMarkup = hasMultipleViews
-    ? `<div class="toggle-group">${toggleButtons}</div>`
-    : `<div class="single-toggle">${toggleButtons}</div>`;
+  const profileLabel = state.profile === 'companion' ? 'Acompanhantes' : 'Visitantes';
   const status = state.dashboardFilters.status || 'all';
   const queryValue = (state.dashboardFilters.query || '').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   content.innerHTML = `
@@ -1548,17 +1671,17 @@ function loadDashboard(type){
         <div class="stat-card" id="statCardDueSoon"><span>Próximo do horário</span><strong id="statDueSoon">0</strong></div>
         <div class="stat-card" id="statCardOverdue"><span>Vencidos</span><strong id="statOverdue">0</strong></div>
       </div>
-      <div class="card">
-        <div class="card-header">
-          <h2>Monitor de armários</h2>
-          <button class="btn-secondary" onclick="refreshCurrentView()">Atualizar</button>
-        </div>
-        <div class="dashboard-controls">
-          <div class="control">
-            <label>Perfil monitorado</label>
-            ${toggleMarkup}
+        <div class="card">
+          <div class="card-header">
+            <h2>Monitor de armários</h2>
+            <button class="btn-secondary" onclick="refreshCurrentView()">Atualizar</button>
           </div>
-          <div class="control">
+          <div class="dashboard-controls">
+            <div class="control">
+              <label>Perfil monitorado</label>
+              <span class="tag accent">${profileLabel}</span>
+            </div>
+            <div class="control">
             <label>Status</label>
             <select id="dashboardStatus" onchange="handleDashboardStatusChange(this.value)">
               <option value="all"${status==='all'?' selected':''}>Todos</option>
@@ -1584,28 +1707,21 @@ function loadDashboard(type){
     </section>`;
 
   const unitName = state.currentUnit.name;
-  state.lockerCache = { type: null, unit: null, rows: null };
+  state.lockerCache = { profile: null, unit: null, rows: null };
   const grid = document.getElementById('grid');
   if (grid) grid.innerHTML = '<div class="loading"><div class="loading-indicator"></div><span>Carregando armários...</span></div>';
   ['statFree','statInUse','statDueSoon','statOverdue'].forEach(id=>{
     const el = document.getElementById(id);
     if (el) el.textContent = '—';
   });
-  const currentView = state.view;
-  renderLockers(currentView, unitName);
-  loadStats(currentView, unitName);
+  const currentProfile = state.profile;
+  renderLockers(currentProfile, unitName);
+  loadStats(currentProfile, unitName);
 }
 
 function refreshCurrentView(){
   playSound('click');
-  loadDashboard(state.view);
-}
-
-function switchDashboardScope(scope){
-  const allowed = getAllowedViews();
-  if (!scope || !allowed.includes(scope) || state.view === scope) return;
-  playSound('click');
-  loadDashboard(scope);
+  loadDashboard();
 }
 
 function handleDashboardStatusChange(value){
@@ -1625,17 +1741,17 @@ function handleDashboardQuery(value){
 function applyDashboardFilters(){
   if (!state.currentUnit) return;
   const cache = state.lockerCache || {};
-  if (cache.type === state.view && cache.unit === state.currentUnit.name && Array.isArray(cache.rows)) {
-    renderLockerGrid(cache.rows, state.view, state.currentUnit.name);
+  if (cache.profile === state.profile && cache.unit === state.currentUnit.name && Array.isArray(cache.rows)) {
+    renderLockerGrid(cache.rows, state.profile, state.currentUnit.name);
   } else {
-    renderLockers(state.view, state.currentUnit.name);
+    renderLockers(state.profile, state.currentUnit.name);
   }
 }
 
 function renderLockers(type, unit){
   google.script.run.withSuccessHandler(rows=>{
     if (!state.currentUnit || state.currentUnit.name !== unit) return;
-    state.lockerCache = { type, unit, rows };
+    state.lockerCache = { profile: type, unit, rows };
     renderLockerGrid(rows, type, unit);
   }).getLockersData(type, unit);
 }
@@ -1645,7 +1761,7 @@ function renderLockerGrid(rows, type, unit){
   if (!grid) return;
   const allRows = Array.isArray(rows) ? rows : [];
   if (!allRows.length){
-    grid.innerHTML = '<div class="empty-state">Nenhum armário configurado.</div>';
+    grid.innerHTML = '<div class="empty-state">Nenhum armário configurado para o perfil selecionado.</div>';
     state.notifications = [];
     updateNotificationBell();
     return;
@@ -1673,7 +1789,7 @@ function renderLockerGrid(rows, type, unit){
     return row.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== '');
   });
   if (!dataRows.length){
-    grid.innerHTML = '<div class="empty-state">Nenhum armário configurado.</div>';
+    grid.innerHTML = '<div class="empty-state">Nenhum armário configurado para o perfil selecionado.</div>';
     state.notifications = [];
     updateNotificationBell();
     return;
@@ -1814,7 +1930,7 @@ function submitRegister(lockerNum, type){
     if (res && res.success) {
       playSound('success');
       closeModal();
-      loadDashboard(state.view);
+      loadDashboard();
     } else {
       playSound('error');
       alert((res && res.message) || 'Falha ao registrar.');
@@ -1849,7 +1965,7 @@ function confirmCheckout(lockerNum, type){
     if (res && res.success) {
       playSound('success');
       closeModal();
-      loadDashboard(state.view);
+      loadDashboard();
     } else {
       playSound('error');
       alert((res && res.message) || 'Falha ao concluir baixa.');
@@ -1914,7 +2030,7 @@ function saveLockerCfg(type){
         hint.textContent = `Distribuição sugerida: ${res.layout.rows} × ${res.layout.cols} · Total ${res.count}`;
       }
       alert('Configuração salva!');
-      loadDashboard(state.view);
+      loadDashboard();
     } else {
       playSound('error');
       alert((res && res.message) || 'Falha ao salvar.');
@@ -2123,6 +2239,7 @@ function showReports(){
   if (titleEl) titleEl.textContent = 'Relatórios avançados';
   const units = state.units || [];
   const selectedUnits = state.reportFilters.units || [];
+  const profileLabel = state.profile === 'companion' ? 'Acompanhantes' : 'Visitantes';
   const unitChips = units.length
     ? units.map(u=>`<label class="checkbox-pill"><input type="checkbox" value="${escapeHtml(u.name)}" ${selectedUnits.includes(u.name)?'checked':''} onchange="toggleReportUnit(this.value,this.checked)"><span>${escapeHtml(u.display)}</span></label>`).join('')
     : '<span class="tag muted">Nenhuma unidade disponível</span>';
@@ -2137,12 +2254,8 @@ function showReports(){
       </div>
       <div class="report-filters">
         <div class="control">
-          <label>Tipo de registro</label>
-          <select id="reportType" onchange="changeReportFilter('type', this.value)">
-            <option value="all"${state.reportFilters.type==='all'?' selected':''}>Todos</option>
-            <option value="visitor"${state.reportFilters.type==='visitor'?' selected':''}>Visitantes</option>
-            <option value="companion"${state.reportFilters.type==='companion'?' selected':''}>Acompanhantes</option>
-          </select>
+          <label>Perfil monitorado</label>
+          <span class="tag accent">${profileLabel}</span>
         </div>
         <div class="control">
           <label>Ação</label>
@@ -2194,6 +2307,7 @@ function prepareReportFilters(){
     const fallback = (state.availableUnits && state.availableUnits.length ? state.availableUnits : state.units || []).map(u=>u.name);
     filters.units = fallback;
   }
+  filters.type = state.profile;
   return filters;
 }
 
@@ -2219,13 +2333,14 @@ function renderReportSummary(report){
   const total = summary.total || 0;
   const entries = summary.byAction ? (summary.byAction.Registrar || 0) : 0;
   const exits = summary.byAction ? (summary.byAction.Baixa || 0) : 0;
-  const visitor = summary.byType ? (summary.byType.visitor || 0) : 0;
-  const companion = summary.byType ? (summary.byType.companion || 0) : 0;
+  const selectedProfile = state.profile;
+  const selectedLabel = selectedProfile === 'companion' ? 'Acompanhantes' : 'Visitantes';
+  const selectedCount = summary.byType ? (summary.byType[selectedProfile] || 0) : 0;
   const topUnit = summary.byUnit ? Object.keys(summary.byUnit).sort((a,b)=>summary.byUnit[b]-summary.byUnit[a])[0] : null;
   summaryEl.innerHTML = `
     <div class="summary-card"><span>Total de registros</span><strong>${total}</strong></div>
     <div class="summary-card"><span>Entradas registradas</span><strong>${entries}</strong><small style="color:var(--text-muted);font-size:0.8rem;">Baixas: ${exits}</small></div>
-    <div class="summary-card"><span>Perfil</span><strong>${visitor}</strong><small style="color:var(--text-muted);font-size:0.8rem;">Acompanhantes: ${companion}</small></div>
+    <div class="summary-card"><span>Perfil selecionado</span><strong>${selectedLabel}</strong><small style="color:var(--text-muted);font-size:0.8rem;">Registros: ${selectedCount}</small></div>
     <div class="summary-card"><span>Unidade destaque</span><strong>${topUnit ? escapeHtml(topUnit) : '—'}</strong></div>`;
 }
 
@@ -2240,9 +2355,10 @@ function renderReportTable(report){
   const headers = report.headers || [];
   const head = headers.map(h=>`<th>${escapeHtml(h)}</th>`).join('');
   const body = rows.map(row=>{
+    const typeLabel = row.type === 'companion' ? 'Acompanhantes' : 'Visitantes';
     return `<tr>
       <td>${escapeHtml(row.timestampDisplay)}</td>
-      <td>${escapeHtml(row.type)}</td>
+      <td>${escapeHtml(typeLabel)}</td>
       <td>${escapeHtml(row.unit)}</td>
       <td>${escapeHtml(row.visitorName)}</td>
       <td>${escapeHtml(row.patientName)}</td>
@@ -2312,9 +2428,9 @@ function exportReportFile(format){
 function showIndicators(){
   const content = document.getElementById('mainContent');
   if (!content) return;
-  state.view = 'indicators';
   state.activePage = 'indicators';
   updateNavigation();
+  updateProfileSelector();
   const titleEl = document.getElementById('viewTitle');
   if (titleEl) titleEl.textContent = 'Indicadores operacionais';
   const availableUnits = state.availableUnits.length ? state.availableUnits : state.units;
@@ -2322,19 +2438,15 @@ function showIndicators(){
     state.indicatorFilters.units = (availableUnits || []).map(u=>u.name);
   }
   const unitOptions = (availableUnits || []).map(u=>`<label class="checkbox-pill"><input type="checkbox" value="${escapeHtml(u.name)}" ${state.indicatorFilters.units.includes(u.name)?'checked':''} onchange="toggleIndicatorUnit(this.value,this.checked)"><span>${escapeHtml(u.display)}</span></label>`).join('');
-  const type = state.indicatorFilters.type || 'all';
   const days = state.indicatorFilters.days || 30;
+  const profileLabel = state.profile === 'companion' ? 'Acompanhantes' : 'Visitantes';
   content.innerHTML = `
     <div class="card">
       <div class="card-header"><h2>Indicadores estratégicos</h2></div>
       <div class="dashboard-controls" style="margin-bottom:16px;">
         <div class="control">
           <label>Perfil analisado</label>
-          <div class="toggle-group">
-            <button class="toggle ${type==='all' ? 'active' : ''}" type="button" onclick="changeIndicatorFilter('type','all')">Todos</button>
-            <button class="toggle ${type==='visitor' ? 'active' : ''}" type="button" onclick="changeIndicatorFilter('type','visitor')">Visitantes</button>
-            <button class="toggle ${type==='companion' ? 'active' : ''}" type="button" onclick="changeIndicatorFilter('type','companion')">Acompanhantes</button>
-          </div>
+          <span class="tag accent">${profileLabel}</span>
         </div>
         <div class="control">
           <label>Período</label>
@@ -2371,8 +2483,6 @@ function showIndicators(){
 function changeIndicatorFilter(key, value){
   if (key === 'days') {
     state.indicatorFilters.days = Number(value) || 30;
-  } else {
-    state.indicatorFilters[key] = value;
   }
   loadIndicators();
 }
@@ -2395,7 +2505,7 @@ function loadIndicators(){
   if (activity) activity.innerHTML = '';
   if (recent) recent.innerHTML = '';
   google.script.run.withSuccessHandler(renderIndicators).getIndicatorsData({
-    type: state.indicatorFilters.type,
+    type: state.profile,
     units: state.indicatorFilters.units,
     days: state.indicatorFilters.days
   });
