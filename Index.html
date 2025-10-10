@@ -14,6 +14,9 @@
     body {
       margin: 0;
       min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
       transition: background 0.3s ease, color 0.3s ease;
     }
 
@@ -278,7 +281,6 @@
     }
 
     .nav-item,
-    .unit-item,
     .sidebar .logout,
     .admin-link {
       width: 100%;
@@ -297,21 +299,13 @@
     }
 
     .nav-item:hover,
-    .unit-item:hover,
     .admin-link:hover {
       background: rgba(255,255,255,0.08);
     }
 
-    .nav-item.active,
-    .unit-item.active {
+    .nav-item.active {
       background: var(--sidebar-active);
       color: #fff;
-    }
-
-    .unit-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
     }
 
     .sidebar .logout {
@@ -347,7 +341,14 @@
     .topbar-left {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 14px;
+    }
+
+    .topbar-title-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
     }
 
     #viewTitle {
@@ -357,41 +358,81 @@
       color: var(--text);
     }
 
+    .current-unit {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: background 0.2s ease, color 0.2s ease, border 0.2s ease;
+    }
+
+    .current-unit.has-value {
+      color: var(--text);
+      background: var(--surface-elevated);
+    }
+
     .unit-selector {
       display: flex;
-      align-items: center;
-      gap: 12px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .unit-selector:empty::after {
+      content: 'Nenhuma unidade disponível';
+      font-size: 0.85rem;
       color: var(--text-muted);
-      font-size: 0.9rem;
     }
 
     .unit-pill {
       display: inline-flex;
       align-items: center;
-      gap: 12px;
-      padding: 8px 14px;
+      gap: 10px;
+      padding: 8px 16px;
       border-radius: 999px;
       border: 1px solid var(--border);
       background: var(--surface);
       color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
       box-shadow: 0 12px 30px rgba(15,23,42,0.08);
     }
 
-    .unit-pill select {
-      border: none;
-      background: transparent;
-      color: inherit;
+    .unit-pill .unit-icon {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #fff;
       font-size: 0.95rem;
-      font-weight: 600;
     }
 
-    .unit-pill select:focus {
-      outline: none;
+    .unit-pill:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
     }
 
-    .unit-tag {
-      font-weight: 600;
-      color: var(--text);
+    .unit-pill.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 18px 34px rgba(37,99,235,0.32);
+    }
+
+    .unit-pill[disabled],
+    .unit-pill[aria-disabled="true"] {
+      cursor: default;
+      opacity: 0.75;
+      transform: none;
+      box-shadow: none;
     }
 
     .topbar-actions {
@@ -532,6 +573,25 @@
       gap: 18px;
     }
 
+    .locker-grid .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 40px 0;
+    }
+
+    .loading-indicator {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      border-top-color: var(--primary);
+      animation: spin 0.9s linear infinite;
+    }
+
     .locker {
       border-radius: 18px;
       padding: 20px 16px;
@@ -610,6 +670,17 @@
       border-radius: 999px;
       background: var(--surface-elevated);
       border: 1px solid var(--border);
+    }
+
+    .config-hint {
+      margin: 12px 0 0;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
 
     table {
@@ -765,6 +836,20 @@
         flex-direction: column;
         align-items: flex-start;
       }
+      .topbar-title-row {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .current-unit {
+        width: 100%;
+        justify-content: center;
+      }
+      .unit-selector {
+        width: 100%;
+      }
+      .unit-selector .unit-pill {
+        flex: 1 1 auto;
+      }
       .topbar-actions {
         width: 100%;
         justify-content: space-between;
@@ -810,20 +895,16 @@
       <nav class="sidebar-nav">
         <div class="sidebar-section">
           <span class="section-title">Visão geral</span>
-          <button class="nav-item" data-view="visitor" onclick="loadDashboard('visitor')">👥 Armários Visitantes</button>
-          <button class="nav-item" data-view="companion" onclick="loadDashboard('companion')">🧳 Armários Acompanhantes</button>
-        </div>
-        <div class="sidebar-section">
-          <span class="section-title">Unidades</span>
-          <div id="unitsMenu" class="unit-list"></div>
+          <button class="nav-item" data-view="visitor" onclick="playSound('click');loadDashboard('visitor')">👥 Armários Visitantes</button>
+          <button class="nav-item" data-view="companion" onclick="playSound('click');loadDashboard('companion')">🧳 Armários Acompanhantes</button>
         </div>
         <div id="adminSection" class="sidebar-section" style="display:none;">
           <span class="section-title">Administração</span>
-          <button class="admin-link" onclick="showLockerSettings()">⚙️ Configurações de Armários</button>
-          <button class="admin-link" onclick="showUnitSettings()">🏢 Unidades</button>
-          <button class="admin-link" onclick="showUsers()">👤 Usuários</button>
-          <button class="admin-link" onclick="showReports()">📊 Relatórios</button>
-          <button class="admin-link" onclick="showAudit()">📝 Auditoria</button>
+          <button class="admin-link" onclick="playSound('click');showLockerSettings()">⚙️ Configurações de Armários</button>
+          <button class="admin-link" onclick="playSound('click');showUnitSettings()">🏢 Unidades</button>
+          <button class="admin-link" onclick="playSound('click');showUsers()">👤 Usuários</button>
+          <button class="admin-link" onclick="playSound('click');showReports()">📊 Relatórios</button>
+          <button class="admin-link" onclick="playSound('click');showAudit()">📝 Auditoria</button>
         </div>
       </nav>
       <button class="logout" onclick="handleLogout()">Sair</button>
@@ -831,7 +912,10 @@
     <div class="workspace">
       <header class="topbar">
         <div class="topbar-left">
-          <h1 id="viewTitle">Painel</h1>
+          <div class="topbar-title-row">
+            <h1 id="viewTitle">Painel</h1>
+            <span id="currentUnitLabel" class="current-unit">Selecione uma unidade</span>
+          </div>
           <div class="unit-selector" id="unitSelector"></div>
         </div>
         <div class="topbar-actions">
@@ -869,6 +953,76 @@ const state = {
   activePage: 'dashboard',
 };
 
+let audioCtx = null;
+let audioReady = false;
+const SOUND_LIBRARY = {
+  click: [
+    { freq: 420, duration: 0.1, type: 'triangle', volume: 0.16 }
+  ],
+  success: [
+    { freq: 520, duration: 0.14, type: 'sine', volume: 0.14 },
+    { freq: 680, duration: 0.16, type: 'sine', volume: 0.12, delay: 0.1 }
+  ],
+  error: [
+    { freq: 220, duration: 0.28, type: 'sawtooth', volume: 0.18 }
+  ],
+  modal: [
+    { freq: 500, duration: 0.12, type: 'square', volume: 0.12 }
+  ],
+  notice: [
+    { freq: 600, duration: 0.12, type: 'triangle', volume: 0.14 }
+  ]
+};
+
+function ensureAudioContext(){
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return null;
+  if (!audioCtx) audioCtx = new Ctx();
+  return audioCtx;
+}
+
+function enableAudio(){
+  const ctx = ensureAudioContext();
+  if (!ctx) return;
+  if (audioReady) return;
+  const resume = ctx.state === 'suspended' ? ctx.resume() : Promise.resolve();
+  resume.then(()=>{ audioReady = true; }).catch(()=>{});
+}
+
+window.addEventListener('pointerdown', ()=>{
+  enableAudio();
+}, { once: true });
+
+function playSound(name){
+  const ctx = ensureAudioContext();
+  if (!ctx) return;
+  if (!audioReady) {
+    const resume = ctx.state === 'suspended' ? ctx.resume() : Promise.resolve();
+    resume.then(()=>{
+      audioReady = true;
+      playSound(name);
+    }).catch(()=>{});
+    return;
+  }
+  const tones = SOUND_LIBRARY[name];
+  if (!tones || !tones.length) return;
+  const now = ctx.currentTime;
+  tones.forEach(tone=>{
+    const start = now + (tone.delay || 0);
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = tone.type || 'sine';
+    osc.frequency.setValueAtTime(tone.freq, start);
+    const volume = Math.max(0.001, tone.volume || 0.12);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(volume, start + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + tone.duration);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(start);
+    osc.stop(start + tone.duration + 0.04);
+  });
+}
+
 const PROFILES = {
   ADMIN: 'admin',
   VISITOR: 'armario_visitante',
@@ -876,6 +1030,7 @@ const PROFILES = {
 };
 
 function toggleTheme(){
+  playSound('click');
   state.theme = state.theme === 'light' ? 'dark' : 'light';
   applyTheme(state.theme);
 }
@@ -902,6 +1057,7 @@ updateThemeButtons();
 
 function submitLogin(e){
   e.preventDefault();
+  playSound('click');
   const username = document.getElementById('username').value.trim();
   const password = document.getElementById('password').value;
   document.getElementById('loginError').style.display = 'none';
@@ -909,12 +1065,15 @@ function submitLogin(e){
   google.script.run
     .withSuccessHandler(res=>{
       if (res && res.success) {
+        playSound('success');
         setupAfterLogin(res);
       } else {
+        playSound('error');
         showError('loginError', (res && res.message) || 'Falha ao autenticar.');
       }
     })
     .withFailureHandler(err=>{
+      playSound('error');
       showError('loginError', 'Erro de comunicação: '+err.message);
     })
     .login(username, password);
@@ -939,6 +1098,7 @@ function renderUserChip(){
 }
 
 function handleLogout(){
+  playSound('click');
   state.user = null;
   state.units = [];
   state.currentUnit = null;
@@ -951,6 +1111,7 @@ function handleLogout(){
   document.getElementById('userChip').style.display = 'none';
   updateThemeButtons();
   updateNotificationBell();
+  updateUnitSelector();
 }
 
 function showError(elId, msg){
@@ -987,7 +1148,6 @@ function loadUnitsAndStart(reloadDashboard = true, callback){
     state.currentUnit = nextUnit;
 
     updateAdminVisibility();
-    refreshUnitsMenu();
     updateUnitSelector();
     updateNavigation();
 
@@ -1017,54 +1177,47 @@ function updateAdminVisibility(){
 }
 
 function updateUnitSelector(){
-  const container = document.getElementById('unitSelector');
-  if (!container) return;
-  const unit = state.currentUnit;
-  if (!unit) {
-    container.innerHTML = '<span class="unit-pill">Nenhuma unidade ativa</span>';
-    return;
-  }
-  if (isAdmin()) {
-    if (!state.units || !state.units.length) {
-      container.innerHTML = '<div class="unit-pill"><strong>Unidade</strong><span class="unit-tag" style="color:var(--text-muted);">Nenhuma unidade ativa</span></div>';
-      return;
+  const label = document.getElementById('currentUnitLabel');
+  if (label) {
+    if (state.currentUnit) {
+      label.textContent = `Unidade · ${state.currentUnit.display}`;
+      label.classList.add('has-value');
+    } else {
+      label.textContent = 'Selecione uma unidade';
+      label.classList.remove('has-value');
     }
-    const options = state.units.map(u=>`<option value="${u.name.replace(/"/g,'&quot;')}" ${unit.name===u.name?'selected':''}>${u.display}</option>`).join('');
-    container.innerHTML = `<div class="unit-pill"><strong>Unidade</strong><select onchange="handleUnitChange(this.value)">${options}</select></div>`;
-  } else {
-    container.innerHTML = `<div class="unit-pill"><strong>Unidade</strong><span class="unit-tag">${unit.display}</span></div>`;
   }
+  refreshUnitsMenu();
 }
 
 function handleUnitChange(name){
-  const unit = findUnit(name);
-  if (!unit) return;
-  state.currentUnit = unit;
-  refreshUnitsMenu();
-  updateUnitSelector();
-  goToCurrentPage();
+  changeUnit(name);
 }
 
 function refreshUnitsMenu(){
-  const container = document.getElementById('unitsMenu');
+  const container = document.getElementById('unitSelector');
   if (!container) return;
   const units = isAdmin() ? state.units : (state.availableUnits || []);
   if (!units.length){
-    container.innerHTML = '<span style="color:var(--sidebar-muted);">Sem unidades</span>';
+    container.innerHTML = '';
     return;
   }
+  const disableSelection = !isAdmin() && units.length <= 1;
   container.innerHTML = units.map(u=>{
     const active = state.currentUnit && state.currentUnit.name === u.name;
-    return `<button class="unit-item ${active?'active':''}" onclick="changeUnit('${u.name.replace(/'/g,"\\'")}')">🏥 ${u.display}</button>`;
+    const escapedName = u.name.replace(/'/g, "\\'");
+    const disabledAttr = disableSelection && active ? 'disabled aria-disabled="true"' : '';
+    const action = disabledAttr ? '' : `onclick="changeUnit('${escapedName}')"`;
+    return `<button class="unit-pill ${active?'active':''}" type="button" ${disabledAttr} ${action}><span class="unit-icon">🏥</span><span>${u.display}</span></button>`;
   }).join('');
 }
 
 function changeUnit(name){
   const unit = findUnit(name);
   if (!unit) return;
+  playSound('click');
   state.currentUnit = unit;
   updateUnitSelector();
-  refreshUnitsMenu();
   goToCurrentPage();
 }
 
@@ -1141,13 +1294,18 @@ function loadDashboard(type){
     </section>`;
 
   const unitName = state.currentUnit.name;
-  google.script.run.withSuccessHandler(cfg=>{
-    renderLockers(type, unitName);
-    loadStats(type, unitName, cfg);
-  }).getLockerConfig(type, unitName);
+  const grid = document.getElementById('grid');
+  if (grid) grid.innerHTML = '<div class="loading"><div class="loading-indicator"></div><span>Carregando armários...</span></div>';
+  ['statFree','statInUse','statDueSoon','statOverdue'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.textContent = '—';
+  });
+  renderLockers(type, unitName);
+  loadStats(type, unitName);
 }
 
 function refreshCurrentView(){
+  playSound('click');
   loadDashboard(state.view);
 }
 
@@ -1229,7 +1387,7 @@ function updateNotificationBell(){
 
 function showNotifications(){
   if (!state.notifications.length) {
-    openModal('<h2>Notificações</h2><p>Tudo em dia! Nenhum armário vencido.</p>');
+    openModal('<h2>Notificações</h2><p>Tudo em dia! Nenhum armário vencido.</p>', 'notice');
     return;
   }
   const rows = state.notifications.map(n=>`<li><strong>${n.locker}</strong> - ${n.visitor||'Visitante'} (${n.patient||'Paciente'})<br><small>Vencido às ${formatDateTime(n.end)}</small></li>`).join('');
@@ -1244,12 +1402,14 @@ function formatDateTime(value){
   } catch(e){ return '-'; }
 }
 
-function openModal(html){
+function openModal(html, sound = 'modal'){
+  if (sound) playSound(sound);
   document.getElementById('modalBody').innerHTML = html;
   document.getElementById('modal').classList.add('active');
 }
 
 function closeModal(){
+  playSound('click');
   document.getElementById('modal').classList.remove('active');
   document.getElementById('modalBody').innerHTML = '';
 }
@@ -1280,17 +1440,19 @@ function submitRegister(lockerNum, type){
   const b = document.getElementById('r_bed').value.trim();
   const items = document.getElementById('r_items') ? document.getElementById('r_items').value.trim() : '';
   const end = document.getElementById('r_end') ? document.getElementById('r_end').value : '';
-  if (!v || !p || !pa || !b) { alert('Preencha todos os campos.'); return; }
-  if (!items) { alert('Descreva o que foi guardado.'); return; }
-  if (type === 'visitor' && !end) { alert('Informe a previsão de retirada.'); return; }
+  if (!v || !p || !pa || !b) { playSound('error'); alert('Preencha todos os campos.'); return; }
+  if (!items) { playSound('error'); alert('Descreva o que foi guardado.'); return; }
+  if (type === 'visitor' && !end) { playSound('error'); alert('Informe a previsão de retirada.'); return; }
   const unit = state.currentUnit ? state.currentUnit.name : '';
-  if (!unit) { alert('Selecione uma unidade ativa antes de registrar.'); return; }
+  if (!unit) { playSound('error'); alert('Selecione uma unidade ativa antes de registrar.'); return; }
 
   google.script.run.withSuccessHandler(res=>{
     if (res && res.success) {
+      playSound('success');
       closeModal();
       loadDashboard(state.view);
     } else {
+      playSound('error');
       alert((res && res.message) || 'Falha ao registrar.');
     }
   }).registerVisitor(pa, b, v, p, items, end, type, unit, lockerNum);
@@ -1316,13 +1478,16 @@ function getOccupancyHTML(lockerNum, visitor, phone, patient, bed, start, items,
 
 function confirmCheckout(lockerNum, type){
   if (!confirm(`Confirmar baixa do armário ${lockerNum}?`)) return;
+  playSound('click');
   const unit = state.currentUnit ? state.currentUnit.name : '';
-  if (!unit) { alert('Selecione uma unidade ativa.'); return; }
+  if (!unit) { playSound('error'); alert('Selecione uma unidade ativa.'); return; }
   google.script.run.withSuccessHandler(res=>{
     if (res && res.success) {
+      playSound('success');
       closeModal();
       loadDashboard(state.view);
     } else {
+      playSound('error');
       alert((res && res.message) || 'Falha ao concluir baixa.');
     }
   }).checkoutLocker(lockerNum, type, unit);
@@ -1345,47 +1510,52 @@ function showLockerSettings(){
       <div class="config-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;">
         <div class="card" style="margin:0;">
           <h3 style="margin-top:0">Visitantes</h3>
-          <label>Linhas</label><input id="cfgVisitorRows" type="number" min="1" />
-          <label>Colunas</label><input id="cfgVisitorCols" type="number" min="1" />
+          <label>Total de armários</label><input id="cfgVisitorTotal" type="number" min="1" />
           <button class="btn-primary" type="button" onclick="saveLockerCfg('visitor')">Salvar</button>
-          <p id="cfgVisitorTotal" style="color:var(--text-muted);"></p>
+          <p id="cfgVisitorHint" class="config-hint"></p>
         </div>
         <div class="card" style="margin:0;">
           <h3 style="margin-top:0">Acompanhantes</h3>
-          <label>Linhas</label><input id="cfgCompanionRows" type="number" min="1" />
-          <label>Colunas</label><input id="cfgCompanionCols" type="number" min="1" />
+          <label>Total de armários</label><input id="cfgCompanionTotal" type="number" min="1" />
           <button class="btn-primary" type="button" onclick="saveLockerCfg('companion')">Salvar</button>
-          <p id="cfgCompanionTotal" style="color:var(--text-muted);"></p>
+          <p id="cfgCompanionHint" class="config-hint"></p>
         </div>
       </div>
     </div>`;
 
-  google.script.run.withSuccessHandler(cfg=>{
-    document.getElementById('cfgVisitorRows').value = cfg.rows;
-    document.getElementById('cfgVisitorCols').value = cfg.cols;
-    document.getElementById('cfgVisitorTotal').textContent = `Total: ${cfg.rows * cfg.cols}`;
-  }).getLockerConfig('visitor', unitName);
+  const updateHint = (type, cfg)=>{
+    const totalInput = document.getElementById(type==='visitor' ? 'cfgVisitorTotal' : 'cfgCompanionTotal');
+    const hint = document.getElementById(type==='visitor' ? 'cfgVisitorHint' : 'cfgCompanionHint');
+    const total = Number(cfg && cfg.count) || Number(cfg.rows * cfg.cols) || 0;
+    if (totalInput) totalInput.value = total;
+    if (hint) hint.textContent = total ? `Distribuição sugerida: ${cfg.rows} × ${cfg.cols} · Total ${total}` : '';
+  };
 
-  google.script.run.withSuccessHandler(cfg=>{
-    document.getElementById('cfgCompanionRows').value = cfg.rows;
-    document.getElementById('cfgCompanionCols').value = cfg.cols;
-    document.getElementById('cfgCompanionTotal').textContent = `Total: ${cfg.rows * cfg.cols}`;
-  }).getLockerConfig('companion', unitName);
+  google.script.run.withSuccessHandler(cfg=>updateHint('visitor', cfg)).getLockerConfig('visitor', unitName);
+  google.script.run.withSuccessHandler(cfg=>updateHint('companion', cfg)).getLockerConfig('companion', unitName);
 }
 
 function saveLockerCfg(type){
   if (!state.currentUnit) return;
   const unit = state.currentUnit.name;
-  const rows = Number(document.getElementById(type==='visitor'?'cfgVisitorRows':'cfgCompanionRows').value);
-  const cols = Number(document.getElementById(type==='visitor'?'cfgVisitorCols':'cfgCompanionCols').value);
+  const totalInput = document.getElementById(type==='visitor' ? 'cfgVisitorTotal' : 'cfgCompanionTotal');
+  const total = Number(totalInput ? totalInput.value : 0);
+  if (!total || total < 1) { playSound('error'); alert('Informe a quantidade total de armários.'); return; }
+  playSound('click');
   google.script.run.withSuccessHandler(res=>{
     if (res && res.success) {
+      playSound('success');
+      const hint = document.getElementById(type==='visitor' ? 'cfgVisitorHint' : 'cfgCompanionHint');
+      if (hint && res.layout) {
+        hint.textContent = `Distribuição sugerida: ${res.layout.rows} × ${res.layout.cols} · Total ${res.count}`;
+      }
       alert('Configuração salva!');
       loadDashboard(state.view);
     } else {
+      playSound('error');
       alert((res && res.message) || 'Falha ao salvar.');
     }
-  }).setLockerConfig(type, rows, cols, unit);
+  }).setLockerConfig(type, total, unit);
 }
 
 function showUnitSettings(){
@@ -1419,12 +1589,15 @@ function showUnitSettings(){
 function addUnitUI(){
   const name = document.getElementById('unit_name').value.trim();
   const display = document.getElementById('unit_display').value.trim();
-  if (!name){ alert('Informe o nome da unidade.'); return; }
+  playSound('click');
+  if (!name){ playSound('error'); alert('Informe o nome da unidade.'); return; }
   google.script.run.withSuccessHandler(res=>{
     if (res && res.success){
+      playSound('success');
       alert('Unidade salva!');
       loadUnitsAndStart(false, showUnitSettings);
     } else {
+      playSound('error');
       alert((res && res.message) || 'Falha ao salvar unidade.');
     }
   }).addUnit(name, display);
@@ -1432,11 +1605,14 @@ function addUnitUI(){
 
 function removeUnitUI(name){
   if (!confirm(`Desativar a unidade ${name}?`)) return;
+  playSound('click');
   google.script.run.withSuccessHandler(res=>{
     if (res && res.success){
+      playSound('success');
       alert('Unidade desativada.');
       loadUnitsAndStart(false, showUnitSettings);
     } else {
+      playSound('error');
       alert((res && res.message) || 'Falha ao desativar.');
     }
   }).removeUnit(name);
@@ -1493,28 +1669,31 @@ function addUserUI(){
   const e=document.getElementById('u_email').value.trim();
   const pr=document.getElementById('u_profile').value;
   const unit=document.getElementById('u_unit').value;
-  if(!u||!p){ alert('Usuário e senha são obrigatórios.'); return; }
-  if(!unit){ alert('Selecione a unidade do usuário.'); return; }
+  playSound('click');
+  if(!u||!p){ playSound('error'); alert('Usuário e senha são obrigatórios.'); return; }
+  if(!unit){ playSound('error'); alert('Selecione a unidade do usuário.'); return; }
   google.script.run.withSuccessHandler(res=>{
-    if(res && res.success){ alert('Usuário adicionado.'); showUsers(); }
-    else alert((res && res.message) || 'Falha ao adicionar.');
+    if(res && res.success){ playSound('success'); alert('Usuário adicionado.'); showUsers(); }
+    else { playSound('error'); alert((res && res.message) || 'Falha ao adicionar.'); }
   }).addUser(u,p,pr,e,unit);
 }
 
 function resetPassUI(u){
   const np = prompt(`Nova senha para ${u}:`);
   if(!np) return;
+  playSound('click');
   google.script.run.withSuccessHandler(res=>{
-    if(res && res.success){ alert('Senha atualizada.'); }
-    else alert((res && res.message) || 'Falha ao atualizar senha.');
+    if(res && res.success){ playSound('success'); alert('Senha atualizada.'); }
+    else { playSound('error'); alert((res && res.message) || 'Falha ao atualizar senha.'); }
   }).resetPassword(u,np);
 }
 
 function deleteUserUI(u){
   if(!confirm(`Excluir usuário ${u}?`)) return;
+  playSound('click');
   google.script.run.withSuccessHandler(res=>{
-    if(res && res.success){ alert('Usuário excluído.'); showUsers(); }
-    else alert((res && res.message) || 'Falha ao excluir.');
+    if(res && res.success){ playSound('success'); alert('Usuário excluído.'); showUsers(); }
+    else { playSound('error'); alert((res && res.message) || 'Falha ao excluir.'); }
   }).deleteUser(u);
 }
 
@@ -1563,7 +1742,9 @@ function renderTable(rows){
 }
 
 function downloadCSV(type){
+  playSound('click');
   google.script.run.withSuccessHandler(csv=>{
+    playSound('success');
     const uri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
     const a = document.createElement('a');
     a.href = uri;
