@@ -112,8 +112,15 @@ function generateLockers(sheetName, count, prefix, rows, cols) {
   }
 }
 
+function computeGridLayout_(count) {
+  const safe = Math.max(1, Number(count) || 1);
+  const cols = Math.ceil(Math.sqrt(safe));
+  const rows = Math.ceil(safe / cols);
+  return { rows, cols };
+}
+
 /** ========= SETTINGS ========= **/
-function setLockerConfig(type, rows, cols, unit='') {
+function setLockerConfig(type, total, unit='') {
   let sheetName, prefix, key;
   if (type === 'visitor') {
     if (!unit) return { success:false, message:'Unidade obrigatória' };
@@ -130,10 +137,12 @@ function setLockerConfig(type, rows, cols, unit='') {
     key = `NUM_ARMARIOS_COMPANION_${companion.key}`;
   } else return { success:false, message:'Tipo inválido' };
 
-  const rowsN = Number(rows), colsN = Number(cols);
-  if (!rowsN || !colsN) return { success:false, message:'Rows/Cols inválidos' };
-
-  const count = rowsN * colsN;
+  const totalN = Number(total);
+  if (!totalN || totalN < 1) return { success:false, message:'Quantidade inválida' };
+  const layout = computeGridLayout_(totalN);
+  const rowsN = layout.rows;
+  const colsN = layout.cols;
+  const count = totalN;
   let sheet = SS.getSheetByName(sheetName);
   if (!sheet) {
     sheet = SS.insertSheet(sheetName);
@@ -147,7 +156,7 @@ function setLockerConfig(type, rows, cols, unit='') {
   updateSetting(key+'_COLS', colsN);
 
   generateLockers(sheetName, count, prefix, rowsN, colsN);
-  return { success:true, count };
+  return { success:true, count, layout };
 }
 
 function getLockerConfig(type, unit='') {
