@@ -104,16 +104,14 @@
       gap: 16px;
     }
 
-    .login-brand-icon {
-      width: 54px;
-      height: 54px;
-      border-radius: 18px;
-      display: grid;
-      place-items: center;
-      font-size: 24px;
-      background: linear-gradient(135deg, var(--primary), var(--info));
-      color: #fff;
+    .login-logo {
+      width: 72px;
+      height: 72px;
+      border-radius: 16px;
+      object-fit: cover;
+      background: #fff;
       box-shadow: var(--shadow);
+      padding: 6px;
     }
 
     .login-brand h2 {
@@ -239,14 +237,14 @@
       font-size: 1.1rem;
     }
 
-    .sidebar-logo span {
-      display: grid;
-      place-items: center;
-      width: 42px;
-      height: 42px;
+    .sidebar-logo img {
+      width: 48px;
+      height: 48px;
       border-radius: 14px;
-      background: linear-gradient(135deg, #60a5fa, #2563eb);
-      color: #fff;
+      object-fit: cover;
+      background: #fff;
+      box-shadow: var(--shadow);
+      padding: 4px;
     }
 
     .sidebar .theme-switch.small {
@@ -550,6 +548,158 @@
       box-shadow: var(--shadow);
       padding: 28px;
       margin-bottom: 24px;
+    }
+
+    .dashboard-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: flex-end;
+      margin-bottom: 24px;
+    }
+
+    .control {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 180px;
+    }
+
+    .toggle-group {
+      display: inline-flex;
+      gap: 8px;
+      padding: 4px;
+      border-radius: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+
+    .toggle-group .toggle {
+      border: none;
+      padding: 10px 18px;
+      border-radius: 12px;
+      background: transparent;
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .toggle-group .toggle.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 10px 22px rgba(37,99,235,0.28);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .tag.muted {
+      color: var(--text-muted);
+      background: transparent;
+    }
+
+    .checkbox-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .checkbox-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      cursor: pointer;
+      transition: background 0.2s ease, border 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .checkbox-pill input {
+      width: auto;
+      accent-color: var(--primary);
+    }
+
+    .checkbox-pill:hover {
+      border-color: var(--primary);
+      box-shadow: var(--shadow);
+    }
+
+    .report-filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .summary-card {
+      padding: 18px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .summary-card strong {
+      font-size: 1.4rem;
+    }
+
+    .indicator-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+    }
+
+    .indicator-card {
+      padding: 20px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .indicator-card h3 {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .indicator-card strong {
+      font-size: 1.6rem;
+      color: var(--text);
+    }
+
+    .empty-state {
+      padding: 32px;
+      border-radius: 18px;
+      border: 1px dashed var(--border);
+      background: var(--surface);
+      text-align: center;
+      color: var(--text-muted);
     }
 
     .card-header {
@@ -865,7 +1015,7 @@
     <button id="loginThemeToggle" class="theme-switch" type="button" onclick="toggleTheme()">🌙 Modo escuro</button>
     <div class="login-card">
       <div class="login-brand">
-        <div class="login-brand-icon">🔐</div>
+        <img src="https://i.ibb.co/hxbRMNvV/logo-HUC.jpg" alt="Hospital de Urgência de Campina Grande" class="login-logo" />
         <div>
           <h2>Controle de Armários</h2>
           <p class="login-description">Organize lockers de visitantes e acompanhantes em uma experiência moderna, com monitoramento em tempo real.</p>
@@ -889,7 +1039,7 @@
   <div id="app" class="app" style="display:none;">
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-logo"><span>🔒</span> Controle</div>
+        <div class="sidebar-logo"><img src="https://i.ibb.co/hxbRMNvV/logo-HUC.jpg" alt="HUC" /> Controle HUC</div>
         <button id="sidebarThemeToggle" class="theme-switch small" type="button" onclick="toggleTheme()">🌙</button>
       </div>
       <nav class="sidebar-nav">
@@ -897,6 +1047,7 @@
           <span class="section-title">Visão geral</span>
           <button class="nav-item" data-view="visitor" onclick="playSound('click');loadDashboard('visitor')">👥 Armários Visitantes</button>
           <button class="nav-item" data-view="companion" onclick="playSound('click');loadDashboard('companion')">🧳 Armários Acompanhantes</button>
+          <button class="nav-item" data-view="indicators" onclick="playSound('click');showIndicators()">📈 Indicadores</button>
         </div>
         <div id="adminSection" class="sidebar-section" style="display:none;">
           <span class="section-title">Administração</span>
@@ -951,26 +1102,40 @@ const state = {
   notifications: [],
   theme: savedTheme,
   activePage: 'dashboard',
+  dashboardFilters: { status: 'all', query: '' },
+  reportFilters: { type: 'all', action: 'all', status: 'all', units: [], start: '', end: '', query: '' },
+  indicatorFilters: { type: 'all', units: [], days: 30 },
+  lockerCache: { type: null, unit: null, rows: null }
 };
 
 let audioCtx = null;
 let audioReady = false;
 const SOUND_LIBRARY = {
   click: [
-    { freq: 420, duration: 0.1, type: 'triangle', volume: 0.16 }
+    { freq: 420, duration: 0.08, type: 'square', volume: 0.16 },
+    { freq: 640, duration: 0.06, type: 'triangle', volume: 0.12, delay: 0.08 }
   ],
   success: [
-    { freq: 520, duration: 0.14, type: 'sine', volume: 0.14 },
-    { freq: 680, duration: 0.16, type: 'sine', volume: 0.12, delay: 0.1 }
+    { freq: 520, duration: 0.12, type: 'sine', volume: 0.14 },
+    { freq: 720, duration: 0.14, type: 'triangle', volume: 0.12, delay: 0.1 },
+    { freq: 880, duration: 0.16, type: 'sine', volume: 0.1, delay: 0.24 }
   ],
   error: [
-    { freq: 220, duration: 0.28, type: 'sawtooth', volume: 0.18 }
+    { freq: 200, duration: 0.22, type: 'sawtooth', volume: 0.22 },
+    { freq: 140, duration: 0.18, type: 'triangle', volume: 0.16, delay: 0.22 }
   ],
   modal: [
-    { freq: 500, duration: 0.12, type: 'square', volume: 0.12 }
+    { freq: 560, duration: 0.12, type: 'triangle', volume: 0.12 },
+    { freq: 430, duration: 0.1, type: 'sine', volume: 0.1, delay: 0.14 }
   ],
   notice: [
-    { freq: 600, duration: 0.12, type: 'triangle', volume: 0.14 }
+    { freq: 640, duration: 0.14, type: 'sine', volume: 0.12 },
+    { freq: 860, duration: 0.14, type: 'square', volume: 0.1, delay: 0.16 }
+  ],
+  insight: [
+    { freq: 480, duration: 0.16, type: 'triangle', volume: 0.14 },
+    { freq: 720, duration: 0.12, type: 'sine', volume: 0.12, delay: 0.18 },
+    { freq: 960, duration: 0.18, type: 'triangle', volume: 0.1, delay: 0.32 }
   ]
 };
 
@@ -1055,6 +1220,26 @@ function updateThemeButtons(){
 
 updateThemeButtons();
 
+function escapeHtml(value){
+  if (value === null || value === undefined) return '';
+  return String(value).replace(/[&<>"']/g, ch => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;' }[ch]));
+}
+
+function describeMetadata(meta){
+  if (!meta || typeof meta !== 'object') return '';
+  const parts = [];
+  Object.keys(meta).forEach(key=>{
+    let value = meta[key];
+    if (value === null || value === undefined) value = '';
+    else if (typeof value === 'object') {
+      try { value = JSON.stringify(value); }
+      catch (err) { value = String(value); }
+    }
+    parts.push(`${key}: ${value}`);
+  });
+  return escapeHtml(parts.join(' | '));
+}
+
 function submitLogin(e){
   e.preventDefault();
   playSound('click');
@@ -1080,12 +1265,16 @@ function submitLogin(e){
 }
 
 function setupAfterLogin(user){
-  state.user = user;
+  const units = Array.isArray(user.units) ? user.units : (user.defaultUnit ? [user.defaultUnit] : (user.unit ? [user.unit] : []));
+  state.user = Object.assign({}, user, { units });
   state.view = 'visitor';
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   updateThemeButtons();
   renderUserChip();
+  state.dashboardFilters = { status: 'all', query: '' };
+  state.reportFilters = { type: 'all', action: 'all', status: 'all', units: units.slice(), start: '', end: '', query: '' };
+  state.indicatorFilters = { type: 'all', units: units.slice(), days: 30 };
   loadUnitsAndStart(true);
 }
 
@@ -1105,6 +1294,10 @@ function handleLogout(){
   state.availableUnits = [];
   state.notifications = [];
   state.activePage = 'dashboard';
+  state.dashboardFilters = { status: 'all', query: '' };
+  state.reportFilters = { type: 'all', action: 'all', status: 'all', units: [], start: '', end: '', query: '' };
+  state.indicatorFilters = { type: 'all', units: [], days: 30 };
+  state.lockerCache = { type: null, unit: null, rows: null };
   document.getElementById('app').style.display = 'none';
   document.getElementById('loginPage').style.display = 'flex';
   document.getElementById('loginForm').reset();
@@ -1125,27 +1318,38 @@ function loadUnitsAndStart(reloadDashboard = true, callback){
   google.script.run.withSuccessHandler(units=>{
     state.units = units || [];
     const currentName = state.currentUnit ? state.currentUnit.name : '';
-    const assignedUnit = state.user.unit || '';
+    const assignedUnits = Array.isArray(state.user && state.user.units) ? state.user.units : [];
     let availableUnits = [];
     if (isAdmin()) {
       availableUnits = state.units.slice();
-    } else {
-      availableUnits = state.units.filter(u=>u.name === assignedUnit);
-      if (!availableUnits.length && assignedUnit) {
-        availableUnits = [{ name: assignedUnit, display: assignedUnit, key: assignedUnit.replace(/[^A-Za-z0-9]/g,'_').toUpperCase() }];
-      }
+    } else if (assignedUnits.length) {
+      availableUnits = state.units.filter(u=>assignedUnits.includes(u.name));
+      assignedUnits.forEach(name => {
+        if (!availableUnits.find(u=>u.name === name)) {
+          availableUnits.push({ name, display: name });
+        }
+      });
     }
     state.availableUnits = availableUnits;
 
     const findInList = (arr, name) => (arr || []).find(u=>u.name === name) || null;
     let nextUnit = currentName ? findInList(availableUnits, currentName) || findInList(state.units, currentName) : null;
-    if (!nextUnit && assignedUnit) {
-      nextUnit = findInList(availableUnits, assignedUnit) || findInList(state.units, assignedUnit);
+    if (!nextUnit && assignedUnits.length) {
+      nextUnit = assignedUnits
+        .map(name => findInList(availableUnits, name) || findInList(state.units, name))
+        .find(Boolean) || null;
     }
     if (!nextUnit) {
       nextUnit = availableUnits[0] || state.units[0] || null;
     }
     state.currentUnit = nextUnit;
+
+    const availableNames = availableUnits.map(u=>u.name);
+    state.reportFilters.units = state.reportFilters.units.filter(name => availableNames.includes(name));
+    if (!state.reportFilters.units.length && availableNames.length) {
+      state.reportFilters.units = availableNames.slice();
+    }
+    state.indicatorFilters.units = state.reportFilters.units.slice();
 
     updateAdminVisibility();
     updateUnitSelector();
@@ -1217,6 +1421,7 @@ function changeUnit(name){
   if (!unit) return;
   playSound('click');
   state.currentUnit = unit;
+  state.lockerCache = { type: null, unit: null, rows: null };
   updateUnitSelector();
   goToCurrentPage();
 }
@@ -1241,6 +1446,9 @@ function goToCurrentPage(){
     case 'audit':
       showAudit();
       break;
+    case 'indicators':
+      showIndicators();
+      break;
     default:
       loadDashboard(state.view);
   }
@@ -1252,10 +1460,14 @@ function updateNavigation(){
     if (btn.dataset.view === state.view) btn.classList.add('active');
     else btn.classList.remove('active');
   });
-  const title = state.view === 'visitor' ? 'Armários de Visitantes' : 'Armários de Acompanhantes';
+  let title;
+  if (state.view === 'visitor') title = 'Armários de Visitantes';
+  else if (state.view === 'companion') title = 'Armários de Acompanhantes';
+  else if (state.view === 'indicators') title = 'Indicadores Operacionais';
+  else title = 'Painel';
   const unitLabel = state.currentUnit ? ` · ${state.currentUnit.display}` : '';
   const titleEl = document.getElementById('viewTitle');
-  if (titleEl) titleEl.textContent = title + unitLabel;
+  if (titleEl) titleEl.textContent = title + (state.view === 'indicators' ? '' : unitLabel);
 }
 
 function loadDashboard(type){
@@ -1270,6 +1482,8 @@ function loadDashboard(type){
     content.innerHTML = '<div class="card"><h2>Selecione uma unidade</h2><p>Para visualizar os armários, escolha uma unidade ativa.</p></div>';
     return;
   }
+  const status = state.dashboardFilters.status || 'all';
+  const queryValue = (state.dashboardFilters.query || '').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   content.innerHTML = `
     <section class="dashboard">
       <div class="dashboard-grid">
@@ -1283,6 +1497,29 @@ function loadDashboard(type){
           <h2>Monitor de armários</h2>
           <button class="btn-secondary" onclick="refreshCurrentView()">Atualizar</button>
         </div>
+        <div class="dashboard-controls">
+          <div class="control">
+            <label>Perfil monitorado</label>
+            <div class="toggle-group">
+              <button class="toggle ${state.view === 'visitor' ? 'active' : ''}" type="button" onclick="switchDashboardScope('visitor')">Visitantes</button>
+              <button class="toggle ${state.view === 'companion' ? 'active' : ''}" type="button" onclick="switchDashboardScope('companion')">Acompanhantes</button>
+            </div>
+          </div>
+          <div class="control">
+            <label>Status</label>
+            <select id="dashboardStatus" onchange="handleDashboardStatusChange(this.value)">
+              <option value="all"${status==='all'?' selected':''}>Todos</option>
+              <option value="free"${status==='free'?' selected':''}>Somente livres</option>
+              <option value="inuse"${status==='inuse'?' selected':''}>Em uso</option>
+              <option value="duesoon"${status==='duesoon'?' selected':''}>A vencer</option>
+              <option value="overdue"${status==='overdue'?' selected':''}>Vencidos</option>
+            </select>
+          </div>
+          <div class="control" style="flex:1 1 240px;">
+            <label>Busca rápida</label>
+            <input id="dashboardQuery" placeholder="Nome, paciente ou armário" value="${queryValue}" oninput="handleDashboardQuery(this.value)" />
+          </div>
+        </div>
         <div class="locker-grid" id="grid"></div>
         <div class="legend">
           <span>🔓 Livre</span>
@@ -1294,6 +1531,7 @@ function loadDashboard(type){
     </section>`;
 
   const unitName = state.currentUnit.name;
+  state.lockerCache = { type: null, unit: null, rows: null };
   const grid = document.getElementById('grid');
   if (grid) grid.innerHTML = '<div class="loading"><div class="loading-indicator"></div><span>Carregando armários...</span></div>';
   ['statFree','statInUse','statDueSoon','statOverdue'].forEach(id=>{
@@ -1309,58 +1547,128 @@ function refreshCurrentView(){
   loadDashboard(state.view);
 }
 
+function switchDashboardScope(scope){
+  if (!scope || state.view === scope) return;
+  playSound('click');
+  loadDashboard(scope);
+}
+
+function handleDashboardStatusChange(value){
+  state.dashboardFilters.status = value || 'all';
+  applyDashboardFilters();
+}
+
+let dashboardQueryTimer = null;
+function handleDashboardQuery(value){
+  state.dashboardFilters.query = value || '';
+  if (dashboardQueryTimer) clearTimeout(dashboardQueryTimer);
+  dashboardQueryTimer = setTimeout(()=>{
+    applyDashboardFilters();
+  }, 220);
+}
+
+function applyDashboardFilters(){
+  if (!state.currentUnit) return;
+  const cache = state.lockerCache || {};
+  if (cache.type === state.view && cache.unit === state.currentUnit.name && Array.isArray(cache.rows)) {
+    renderLockerGrid(cache.rows, state.view, state.currentUnit.name);
+  } else {
+    renderLockers(state.view, state.currentUnit.name);
+  }
+}
+
 function renderLockers(type, unit){
   google.script.run.withSuccessHandler(rows=>{
     if (!state.currentUnit || state.currentUnit.name !== unit) return;
-    const grid = document.getElementById('grid');
-    if (!grid) return;
-    if (!rows || !rows.length){
-      grid.innerHTML = '<p style="color:var(--text-muted);">Nenhum armário configurado.</p>';
-      return;
-    }
-    if (rows.length <= 1){
-      grid.innerHTML = '<p style="color:var(--text-muted);">Nenhum armário configurado.</p>';
-      return;
-    }
-    const headers = rows[0];
-    const idx = {
-      number: headers.indexOf('Number'),
-      status: headers.indexOf('Status'),
-      visitor: headers.indexOf('Visitor Name'),
-      phone: headers.indexOf('Phone'),
-      patient: headers.indexOf('Patient Name'),
-      bed: headers.indexOf('Bed'),
-      start: headers.indexOf('Start Time'),
-      items: headers.indexOf('Stored Items'),
-      end: headers.indexOf('Expected End'),
-    };
-    if (idx.items === -1) idx.items = headers.indexOf('Welcome Sent');
-    if (idx.end === -1) idx.end = headers.indexOf('End Time');
-    grid.innerHTML = '';
-    const notifications = [];
-    rows.slice(1).forEach(r=>{
-      if (!r[idx.number]) return;
-      const num = r[idx.number];
-      const status = r[idx.status] || 'Free';
-      const div = document.createElement('div');
-      div.className = `locker status-${status}`;
-      const subtitle = status==='Free' ? 'Livre' : (status==='InUse' ? 'Em uso' : status==='DueSoon' ? 'A vencer' : 'Vencido');
-      div.innerHTML = `${num}<small>${subtitle}</small>`;
-      div.onclick = ()=>{
-        if (status === 'Free') {
-          openModal(getRegisterFormHTML(num, type));
-        } else {
-          openModal(getOccupancyHTML(num, r[idx.visitor], r[idx.phone], r[idx.patient], r[idx.bed], r[idx.start], r[idx.items], r[idx.end], type));
-        }
-      };
-      grid.appendChild(div);
-      if (status === 'Overdue') {
-        notifications.push({ locker:num, visitor:r[idx.visitor], patient:r[idx.patient], end:r[idx.end] });
-      }
-    });
-    state.notifications = notifications;
-    updateNotificationBell();
+    state.lockerCache = { type, unit, rows };
+    renderLockerGrid(rows, type, unit);
   }).getLockersData(type, unit);
+}
+
+function renderLockerGrid(rows, type, unit){
+  const grid = document.getElementById('grid');
+  if (!grid) return;
+  const allRows = Array.isArray(rows) ? rows : [];
+  if (!allRows.length){
+    grid.innerHTML = '<div class="empty-state">Nenhum armário configurado.</div>';
+    state.notifications = [];
+    updateNotificationBell();
+    return;
+  }
+  const headers = allRows[0] || [];
+  const idx = {
+    number: headers.indexOf('Number'),
+    status: headers.indexOf('Status'),
+    visitor: headers.indexOf('Visitor Name'),
+    phone: headers.indexOf('Phone'),
+    patient: headers.indexOf('Patient Name'),
+    bed: headers.indexOf('Bed'),
+    start: headers.indexOf('Start Time'),
+    items: headers.indexOf('Stored Items'),
+    end: headers.indexOf('Expected End'),
+  };
+  if (idx.items === -1) idx.items = headers.indexOf('Welcome Sent');
+  if (idx.end === -1) idx.end = headers.indexOf('End Time');
+  const dataRows = allRows.slice(1).filter(row => {
+    if (!row) return false;
+    if (idx.number >= 0) {
+      const value = row[idx.number];
+      return value !== null && value !== undefined && String(value).trim() !== '';
+    }
+    return row.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== '');
+  });
+  if (!dataRows.length){
+    grid.innerHTML = '<div class="empty-state">Nenhum armário configurado.</div>';
+    state.notifications = [];
+    updateNotificationBell();
+    return;
+  }
+  const statusFilter = (state.dashboardFilters.status || 'all').toLowerCase();
+  const query = (state.dashboardFilters.query || '').toLowerCase();
+  const notifications = [];
+  grid.innerHTML = '';
+  let appended = 0;
+  dataRows.forEach(r=>{
+    const number = idx.number >= 0 ? r[idx.number] : null;
+    if (!number) return;
+    const status = (idx.status >= 0 ? r[idx.status] : 'Free') || 'Free';
+    const visitorName = idx.visitor >= 0 ? (r[idx.visitor] || '') : '';
+    const patientName = idx.patient >= 0 ? (r[idx.patient] || '') : '';
+    const phone = idx.phone >= 0 ? (r[idx.phone] || '') : '';
+    const items = idx.items >= 0 ? (r[idx.items] || '') : '';
+    const bed = idx.bed >= 0 ? (r[idx.bed] || '') : '';
+    const end = idx.end >= 0 ? r[idx.end] : '';
+    if (status === 'Overdue') {
+      notifications.push({ locker:number, visitor:visitorName, patient:patientName, end });
+    }
+    if (statusFilter === 'free' && status !== 'Free') return;
+    if (statusFilter === 'inuse' && status !== 'InUse') return;
+    if (statusFilter === 'duesoon' && status !== 'DueSoon') return;
+    if (statusFilter === 'overdue' && status !== 'Overdue') return;
+    if (query) {
+      const searchable = `${number} ${visitorName} ${patientName} ${phone} ${items} ${bed}`.toLowerCase();
+      if (!searchable.includes(query)) return;
+    }
+    appended++;
+    const div = document.createElement('div');
+    div.className = `locker status-${status}`;
+    const subtitle = status==='Free' ? 'Livre' : (status==='InUse' ? 'Em uso' : status==='DueSoon' ? 'A vencer' : 'Vencido');
+    div.innerHTML = `${number}<small>${subtitle}</small>`;
+    div.onclick = ()=>{
+      if (status === 'Free') {
+        openModal(getRegisterFormHTML(number, type));
+      } else {
+        const start = idx.start >= 0 ? r[idx.start] : '';
+        openModal(getOccupancyHTML(number, visitorName, phone, patientName, bed, start, items, end, type));
+      }
+    };
+    grid.appendChild(div);
+  });
+  if (!appended) {
+    grid.innerHTML = '<div class="empty-state">Nenhum armário encontrado com os filtros selecionados.</div>';
+  }
+  state.notifications = notifications;
+  updateNotificationBell();
 }
 
 function loadStats(type, unit){
@@ -1398,6 +1706,7 @@ function formatDateTime(value){
   if (!value) return '-';
   try {
     const d = value instanceof Date ? value : new Date(value);
+    if (isNaN(d.getTime())) return '-';
     return d.toLocaleString();
   } catch(e){ return '-'; }
 }
@@ -1624,7 +1933,7 @@ function showUsers(){
   state.activePage = 'users';
   const titleEl = document.getElementById('viewTitle');
   if (titleEl) titleEl.textContent = 'Administração · Usuários';
-  const unitOptions = (state.units || []).map(u=>`<option value="${u.name.replace(/"/g,'&quot;')}">${u.display}</option>`).join('');
+  const unitOptions = (state.units || []).map(u=>`<label class="checkbox-pill"><input type="checkbox" value="${escapeHtml(u.name)}"><span>${escapeHtml(u.display)}</span></label>`).join('');
   content.innerHTML = `
     <div class="card">
       <div class="card-header"><h2>Usuários</h2></div>
@@ -1639,11 +1948,9 @@ function showUsers(){
           <option value="armario_visitante">Armário Visitante</option>
           <option value="guarda_volume">Guarda Volume</option>
         </select>
-        <label>Unidade</label>
-        <select id="u_unit">
-          <option value="">-- Selecionar --</option>
-          ${unitOptions}
-        </select>
+        <label>Unidades autorizadas</label>
+        <div class="checkbox-grid" id="userUnitOptions">${unitOptions || '<span class="tag muted">Cadastre unidades para atribuir acessos.</span>'}</div>
+        <small class="config-hint">Selecione todas as unidades que o usuário poderá monitorar.</small>
         <button class="btn-primary" type="button" onclick="addUserUI()">Adicionar</button>
       </div>
       <div class="card" style="margin:0;">
@@ -1652,14 +1959,31 @@ function showUsers(){
       </div>
     </div>`;
 
-  google.script.run.withSuccessHandler(rows=>{
-    const tbl = ['<table><thead><tr><th>Usuário</th><th>Perfil</th><th>Email</th><th>Unidade</th><th style="text-align:right">Ações</th></tr></thead><tbody>'];
-    rows.slice(1).forEach(r=>{
-      const u=r[0], p=r[2], e=r[3], unit=r[4] || '';
-      tbl.push(`<tr><td>${u}</td><td>${p}</td><td>${e||''}</td><td>${unit||'-'}</td><td style="text-align:right;display:flex;gap:8px;justify-content:flex-end;"><button class="btn-secondary" onclick="resetPassUI('${u}')">Reset Senha</button><button class="btn-danger" onclick="deleteUserUI('${u}')">Excluir</button></td></tr>`);
-    });
-    tbl.push('</tbody></table>');
-    document.getElementById('usersArea').innerHTML = tbl.join('');
+  google.script.run.withSuccessHandler(users=>{
+    if (!Array.isArray(users) || !users.length) {
+      document.getElementById('usersArea').innerHTML = '<div class="empty-state">Nenhum usuário cadastrado.</div>';
+      return;
+    }
+    const unitMap = new Map((state.units || []).map(u=>[u.name, u.display]));
+    const rows = users.map(user=>{
+      const units = Array.isArray(user.units) && user.units.length
+        ? user.units.map(name=>`<span class="tag">${escapeHtml(unitMap.get(name) || name)}</span>`).join(' ')
+        : '<span class="tag muted">Sem acesso</span>';
+      const safeUser = escapeHtml(user.username);
+      const encodedUnits = encodeURIComponent(JSON.stringify(user.units || []));
+      return `<tr>
+        <td>${safeUser}</td>
+        <td>${escapeHtml(user.profile)}</td>
+        <td>${escapeHtml(user.email || '')}</td>
+        <td style="display:flex;flex-wrap:wrap;gap:6px;">${units}</td>
+        <td style="text-align:right;display:flex;gap:8px;justify-content:flex-end;">
+          <button class="btn-secondary" onclick="openUserUnitsModal('${user.username.replace(/'/g,"\\'")}', '${encodedUnits}')">Unidades</button>
+          <button class="btn-secondary" onclick="resetPassUI('${user.username.replace(/'/g,"\\'")}')">Reset Senha</button>
+          <button class="btn-danger" onclick="deleteUserUI('${user.username.replace(/'/g,"\\'")}')">Excluir</button>
+        </td>
+      </tr>`;
+    }).join('');
+    document.getElementById('usersArea').innerHTML = `<table><thead><tr><th>Usuário</th><th>Perfil</th><th>Email</th><th>Unidades</th><th style="text-align:right">Ações</th></tr></thead><tbody>${rows}</tbody></table>`;
   }).listUsers();
 }
 
@@ -1668,14 +1992,15 @@ function addUserUI(){
   const p=document.getElementById('u_password').value;
   const e=document.getElementById('u_email').value.trim();
   const pr=document.getElementById('u_profile').value;
-  const unit=document.getElementById('u_unit').value;
+  const unitInputs = document.querySelectorAll('#userUnitOptions input[type="checkbox"]:checked');
+  const units = Array.from(unitInputs).map(cb=>cb.value);
   playSound('click');
   if(!u||!p){ playSound('error'); alert('Usuário e senha são obrigatórios.'); return; }
-  if(!unit){ playSound('error'); alert('Selecione a unidade do usuário.'); return; }
+  if(pr !== PROFILES.ADMIN && !units.length){ playSound('error'); alert('Selecione pelo menos uma unidade para o usuário.'); return; }
   google.script.run.withSuccessHandler(res=>{
     if(res && res.success){ playSound('success'); alert('Usuário adicionado.'); showUsers(); }
     else { playSound('error'); alert((res && res.message) || 'Falha ao adicionar.'); }
-  }).addUser(u,p,pr,e,unit);
+  }).addUser(u,p,pr,e,units);
 }
 
 function resetPassUI(u){
@@ -1697,62 +2022,417 @@ function deleteUserUI(u){
   }).deleteUser(u);
 }
 
+function openUserUnitsModal(username, encodedUnits){
+  let units = [];
+  try {
+    units = JSON.parse(decodeURIComponent(encodedUnits || '[]')) || [];
+  } catch (err) {
+    units = [];
+  }
+  const unitList = state.units || [];
+  const options = unitList.length
+    ? unitList.map(u=>`<label class="checkbox-pill"><input type="checkbox" value="${escapeHtml(u.name)}" ${units.includes(u.name)?'checked':''}><span>${escapeHtml(u.display)}</span></label>`).join('')
+    : '<span class="tag muted">Cadastre unidades para conceder acesso.</span>';
+  const body = `
+    <h2>Unidades de ${escapeHtml(username)}</h2>
+    <p>Selecione as unidades disponíveis para o usuário.</p>
+    <div class="checkbox-grid" id="modalUserUnits">${options}</div>
+    <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:18px;">
+      <button class="btn-secondary" type="button" onclick="closeModal()">Cancelar</button>
+      <button class="btn-primary" type="button" onclick="saveUserUnits('${username.replace(/'/g,"\\'")}')">Salvar</button>
+    </div>`;
+  openModal(body);
+}
+
+function saveUserUnits(username){
+  playSound('click');
+  const inputs = document.querySelectorAll('#modalUserUnits input[type="checkbox"]');
+  const units = Array.from(inputs).filter(cb=>cb.checked).map(cb=>cb.value);
+  google.script.run.withSuccessHandler(res=>{
+    if (res && res.success) {
+      playSound('success');
+      closeModal();
+      showUsers();
+    } else {
+      playSound('error');
+      alert((res && res.message) || 'Falha ao atualizar unidades.');
+    }
+  }).updateUserUnits(username, units);
+}
+
 function showReports(){
   const content = document.getElementById('mainContent');
   if (!content) return;
   state.activePage = 'reports';
   const titleEl = document.getElementById('viewTitle');
-  if (titleEl) titleEl.textContent = 'Relatórios';
+  if (titleEl) titleEl.textContent = 'Relatórios avançados';
+  const units = state.units || [];
+  const selectedUnits = state.reportFilters.units || [];
+  const unitChips = units.length
+    ? units.map(u=>`<label class="checkbox-pill"><input type="checkbox" value="${escapeHtml(u.name)}" ${selectedUnits.includes(u.name)?'checked':''} onchange="toggleReportUnit(this.value,this.checked)"><span>${escapeHtml(u.display)}</span></label>`).join('')
+    : '<span class="tag muted">Nenhuma unidade disponível</span>';
   content.innerHTML = `
     <div class="card">
-      <div class="card-header"><h2>Relatórios</h2></div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:20px;">
-        <div class="card" style="margin:0;">
-          <h3 style="margin-top:0">Visitantes</h3>
-          <button class="btn-primary" type="button" onclick="downloadCSV('visitor')">Baixar CSV</button>
+      <div class="card-header">
+        <h2>Relatórios avançados</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-secondary" type="button" onclick="exportReportFile('csv')">Exportar CSV</button>
+          <button class="btn-secondary" type="button" onclick="exportReportFile('pdf')">Exportar PDF</button>
         </div>
-        <div class="card" style="margin:0;">
-          <h3 style="margin-top:0">Acompanhantes</h3>
-          <button class="btn-primary" type="button" onclick="downloadCSV('companion')">Baixar CSV</button>
+      </div>
+      <div class="report-filters">
+        <div class="control">
+          <label>Tipo de registro</label>
+          <select id="reportType" onchange="changeReportFilter('type', this.value)">
+            <option value="all"${state.reportFilters.type==='all'?' selected':''}>Todos</option>
+            <option value="visitor"${state.reportFilters.type==='visitor'?' selected':''}>Visitantes</option>
+            <option value="companion"${state.reportFilters.type==='companion'?' selected':''}>Acompanhantes</option>
+          </select>
+        </div>
+        <div class="control">
+          <label>Ação</label>
+          <select id="reportAction" onchange="changeReportFilter('action', this.value)">
+            <option value="all"${state.reportFilters.action==='all'?' selected':''}>Todas</option>
+            <option value="Registrar"${state.reportFilters.action==='Registrar'?' selected':''}>Entradas</option>
+            <option value="Baixa"${state.reportFilters.action==='Baixa'?' selected':''}>Baixas</option>
+          </select>
+        </div>
+        <div class="control">
+          <label>Status operacional</label>
+          <select id="reportStatus" onchange="changeReportFilter('status', this.value)">
+            <option value="all"${state.reportFilters.status==='all'?' selected':''}>Todos</option>
+            <option value="ativo"${state.reportFilters.status==='ativo'?' selected':''}>Ativos</option>
+            <option value="concluido"${state.reportFilters.status==='concluido'?' selected':''}>Concluídos</option>
+          </select>
+        </div>
+        <div class="control">
+          <label>Data inicial</label>
+          <input type="date" id="reportStart" value="${state.reportFilters.start || ''}" onchange="changeReportFilter('start', this.value)" />
+        </div>
+        <div class="control">
+          <label>Data final</label>
+          <input type="date" id="reportEnd" value="${state.reportFilters.end || ''}" onchange="changeReportFilter('end', this.value)" />
+        </div>
+        <div class="control" style="flex:1 1 240px;">
+          <label>Busca</label>
+          <input id="reportQuery" placeholder="Nome, paciente, armário ou item" value="${escapeHtml(state.reportFilters.query || '')}" oninput="handleReportQuery(this.value)" />
         </div>
       </div>
       <div class="card" style="margin:0 0 20px;">
-        <h3 style="margin-top:0">Registros Recentes (Visitantes)</h3>
-        <div id="regsV">Carregando...</div>
+        <h3 style="margin-top:0">Unidades incluídas</h3>
+        <div id="reportUnits" class="checkbox-grid">${unitChips}</div>
       </div>
+      <div id="reportSummary" class="summary-grid"></div>
       <div class="card" style="margin:0;">
-        <h3 style="margin-top:0">Registros Recentes (Acompanhantes)</h3>
-        <div id="regsC">Carregando...</div>
+        <h3 style="margin-top:0">Registros filtrados</h3>
+        <div id="reportTable">Carregando...</div>
       </div>
     </div>`;
 
-  google.script.run.withSuccessHandler(rows=>{
-    document.getElementById('regsV').innerHTML = renderTable(rows);
-  }).getRegistrations('visitor');
-  google.script.run.withSuccessHandler(rows=>{
-    document.getElementById('regsC').innerHTML = renderTable(rows);
-  }).getRegistrations('companion');
+  loadAdvancedReport();
 }
 
-function renderTable(rows){
-  if(!rows || rows.length<=1) return '<i>Sem dados</i>';
-  const head = rows[0].map(h=>`<th>${h}</th>`).join('');
-  const body = rows.slice(1).map(r=>`<tr>${r.map(v=>`<td>${(v===null||v===undefined)?'':v}</td>`).join('')}</tr>`).join('');
-  return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+function prepareReportFilters(){
+  const filters = Object.assign({}, state.reportFilters);
+  filters.units = (state.reportFilters.units || []).slice();
+  if (!filters.units.length) {
+    const fallback = (state.availableUnits && state.availableUnits.length ? state.availableUnits : state.units || []).map(u=>u.name);
+    filters.units = fallback;
+  }
+  return filters;
 }
 
-function downloadCSV(type){
+function loadAdvancedReport(){
+  const table = document.getElementById('reportTable');
+  const summary = document.getElementById('reportSummary');
+  if (table) table.innerHTML = '<div class="loading"><div class="loading-indicator"></div><span>Carregando registros...</span></div>';
+  if (summary) summary.innerHTML = '';
+  google.script.run.withSuccessHandler(res=>{
+    if (!res || !res.success) {
+      if (table) table.innerHTML = '<div class="empty-state">Não foi possível carregar os registros.</div>';
+      return;
+    }
+    renderReportSummary(res);
+    renderReportTable(res);
+  }).getAdvancedReport(prepareReportFilters());
+}
+
+function renderReportSummary(report){
+  const summaryEl = document.getElementById('reportSummary');
+  if (!summaryEl) return;
+  const summary = report.summary || {};
+  const total = summary.total || 0;
+  const entries = summary.byAction ? (summary.byAction.Registrar || 0) : 0;
+  const exits = summary.byAction ? (summary.byAction.Baixa || 0) : 0;
+  const visitor = summary.byType ? (summary.byType.visitor || 0) : 0;
+  const companion = summary.byType ? (summary.byType.companion || 0) : 0;
+  const topUnit = summary.byUnit ? Object.keys(summary.byUnit).sort((a,b)=>summary.byUnit[b]-summary.byUnit[a])[0] : null;
+  summaryEl.innerHTML = `
+    <div class="summary-card"><span>Total de registros</span><strong>${total}</strong></div>
+    <div class="summary-card"><span>Entradas registradas</span><strong>${entries}</strong><small style="color:var(--text-muted);font-size:0.8rem;">Baixas: ${exits}</small></div>
+    <div class="summary-card"><span>Perfil</span><strong>${visitor}</strong><small style="color:var(--text-muted);font-size:0.8rem;">Acompanhantes: ${companion}</small></div>
+    <div class="summary-card"><span>Unidade destaque</span><strong>${topUnit ? escapeHtml(topUnit) : '—'}</strong></div>`;
+}
+
+function renderReportTable(report){
+  const table = document.getElementById('reportTable');
+  if (!table) return;
+  const rows = report.rows || [];
+  if (!rows.length){
+    table.innerHTML = '<div class="empty-state">Nenhum registro encontrado com os filtros aplicados.</div>';
+    return;
+  }
+  const headers = report.headers || [];
+  const head = headers.map(h=>`<th>${escapeHtml(h)}</th>`).join('');
+  const body = rows.map(row=>{
+    return `<tr>
+      <td>${escapeHtml(row.timestampDisplay)}</td>
+      <td>${escapeHtml(row.type)}</td>
+      <td>${escapeHtml(row.unit)}</td>
+      <td>${escapeHtml(row.visitorName)}</td>
+      <td>${escapeHtml(row.patientName)}</td>
+      <td>${escapeHtml(row.bed)}</td>
+      <td>${escapeHtml(row.locker)}</td>
+      <td>${escapeHtml(row.action)}</td>
+      <td>${escapeHtml(row.storedItems)}</td>
+      <td>${escapeHtml(row.expectedDisplay)}</td>
+      <td>${escapeHtml(row.phone)}</td>
+    </tr>`;
+  }).join('');
+  table.innerHTML = `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+function changeReportFilter(key, value){
+  state.reportFilters[key] = value || (key === 'status' ? 'all' : '');
+  loadAdvancedReport();
+}
+
+let reportQueryTimer = null;
+function handleReportQuery(value){
+  state.reportFilters.query = value || '';
+  if (reportQueryTimer) clearTimeout(reportQueryTimer);
+  reportQueryTimer = setTimeout(()=>{
+    loadAdvancedReport();
+  }, 250);
+}
+
+function toggleReportUnit(unit, checked){
+  const units = new Set(state.reportFilters.units || []);
+  if (checked) units.add(unit);
+  else units.delete(unit);
+  state.reportFilters.units = Array.from(units);
+  loadAdvancedReport();
+}
+
+function exportReportFile(format){
   playSound('click');
-  google.script.run.withSuccessHandler(csv=>{
+  google.script.run.withSuccessHandler(res=>{
+    if (!res || !res.success){
+      playSound('error');
+      alert((res && res.message) || 'Falha ao exportar relatório.');
+      return;
+    }
     playSound('success');
-    const uri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-    const a = document.createElement('a');
-    a.href = uri;
-    a.download = (type==='visitor'?'visitantes':'acompanhantes') + '_registros.csv';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  }).exportReport(type);
+    if (res.format === 'csv') {
+      const blob = new Blob([res.data], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = res.filename || 'relatorio.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 5000);
+    } else if (res.format === 'pdf') {
+      const link = document.createElement('a');
+      link.href = 'data:application/pdf;base64,' + res.data;
+      link.download = res.filename || 'relatorio.pdf';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+  }).exportAdvancedReport(format, prepareReportFilters());
+}
+
+function showIndicators(){
+  const content = document.getElementById('mainContent');
+  if (!content) return;
+  state.view = 'indicators';
+  state.activePage = 'indicators';
+  updateNavigation();
+  const titleEl = document.getElementById('viewTitle');
+  if (titleEl) titleEl.textContent = 'Indicadores operacionais';
+  const availableUnits = state.availableUnits.length ? state.availableUnits : state.units;
+  if (!state.indicatorFilters.units || !state.indicatorFilters.units.length) {
+    state.indicatorFilters.units = (availableUnits || []).map(u=>u.name);
+  }
+  const unitOptions = (availableUnits || []).map(u=>`<label class="checkbox-pill"><input type="checkbox" value="${escapeHtml(u.name)}" ${state.indicatorFilters.units.includes(u.name)?'checked':''} onchange="toggleIndicatorUnit(this.value,this.checked)"><span>${escapeHtml(u.display)}</span></label>`).join('');
+  const type = state.indicatorFilters.type || 'all';
+  const days = state.indicatorFilters.days || 30;
+  content.innerHTML = `
+    <div class="card">
+      <div class="card-header"><h2>Indicadores estratégicos</h2></div>
+      <div class="dashboard-controls" style="margin-bottom:16px;">
+        <div class="control">
+          <label>Perfil analisado</label>
+          <div class="toggle-group">
+            <button class="toggle ${type==='all' ? 'active' : ''}" type="button" onclick="changeIndicatorFilter('type','all')">Todos</button>
+            <button class="toggle ${type==='visitor' ? 'active' : ''}" type="button" onclick="changeIndicatorFilter('type','visitor')">Visitantes</button>
+            <button class="toggle ${type==='companion' ? 'active' : ''}" type="button" onclick="changeIndicatorFilter('type','companion')">Acompanhantes</button>
+          </div>
+        </div>
+        <div class="control">
+          <label>Período</label>
+          <select id="indicatorDays" onchange="changeIndicatorFilter('days', this.value)">
+            <option value="7"${Number(days)===7?' selected':''}>Últimos 7 dias</option>
+            <option value="15"${Number(days)===15?' selected':''}>Últimos 15 dias</option>
+            <option value="30"${Number(days)===30?' selected':''}>Últimos 30 dias</option>
+            <option value="60"${Number(days)===60?' selected':''}>Últimos 60 dias</option>
+          </select>
+        </div>
+      </div>
+      <div class="card" style="margin:0 0 20px;">
+        <h3 style="margin-top:0">Unidades analisadas</h3>
+        <div id="indicatorUnits" class="checkbox-grid">${unitOptions || '<span class="tag muted">Cadastre unidades para visualizar indicadores.</span>'}</div>
+      </div>
+      <div class="indicator-grid" id="indicatorSummary"></div>
+      <div class="card" style="margin:0 0 20px;">
+        <h3 style="margin-top:0">Ocupação atual</h3>
+        <div id="indicatorOccupancy">Carregando...</div>
+      </div>
+      <div class="card" style="margin:0 0 20px;">
+        <h3 style="margin-top:0">Fluxo diário</h3>
+        <div id="indicatorActivity">Carregando...</div>
+      </div>
+      <div class="card" style="margin:0;">
+        <h3 style="margin-top:0">Movimentações recentes</h3>
+        <div id="indicatorRecent">Carregando...</div>
+      </div>
+    </div>`;
+
+  loadIndicators();
+}
+
+function changeIndicatorFilter(key, value){
+  if (key === 'days') {
+    state.indicatorFilters.days = Number(value) || 30;
+  } else {
+    state.indicatorFilters[key] = value;
+  }
+  loadIndicators();
+}
+
+function toggleIndicatorUnit(unit, checked){
+  const current = new Set(state.indicatorFilters.units || []);
+  if (checked) current.add(unit);
+  else current.delete(unit);
+  state.indicatorFilters.units = Array.from(current);
+  loadIndicators();
+}
+
+function loadIndicators(){
+  const summary = document.getElementById('indicatorSummary');
+  const occupancy = document.getElementById('indicatorOccupancy');
+  const activity = document.getElementById('indicatorActivity');
+  const recent = document.getElementById('indicatorRecent');
+  if (summary) summary.innerHTML = '<div class="loading"><div class="loading-indicator"></div><span>Calculando indicadores...</span></div>';
+  if (occupancy) occupancy.innerHTML = '';
+  if (activity) activity.innerHTML = '';
+  if (recent) recent.innerHTML = '';
+  google.script.run.withSuccessHandler(renderIndicators).getIndicatorsData({
+    type: state.indicatorFilters.type,
+    units: state.indicatorFilters.units,
+    days: state.indicatorFilters.days
+  });
+}
+
+function renderIndicators(data){
+  const summaryEl = document.getElementById('indicatorSummary');
+  const occupancyEl = document.getElementById('indicatorOccupancy');
+  const activityEl = document.getElementById('indicatorActivity');
+  const recentEl = document.getElementById('indicatorRecent');
+  if (!data || !data.success){
+    if (summaryEl) summaryEl.innerHTML = '<div class="empty-state">Não foi possível calcular os indicadores.</div>';
+    if (occupancyEl) occupancyEl.innerHTML = '';
+    if (activityEl) activityEl.innerHTML = '';
+    if (recentEl) recentEl.innerHTML = '';
+    return;
+  }
+  const totals = data.totals || { entries:0, checkouts:0 };
+  const averageOccupancy = (data.occupancy || []).length
+    ? (data.occupancy.reduce((sum, item)=>sum + (item.occupancyRate || 0), 0) / data.occupancy.length)
+    : 0;
+  const expected = data.expected || { averageHours:0, samples:0 };
+  const period = data.period || {};
+  if (summaryEl) {
+    summaryEl.innerHTML = `
+      <div class="indicator-card">
+        <h3>Entradas no período</h3>
+        <strong>${totals.entries}</strong>
+        <span class="tag muted">Período: ${escapeHtml(formatDateTime(period.start))} → ${escapeHtml(formatDateTime(period.end))}</span>
+      </div>
+      <div class="indicator-card">
+        <h3>Baixas concluídas</h3>
+        <strong>${totals.checkouts}</strong>
+        <span class="tag muted">Amostra de ${Number(period.days)||0} dias</span>
+      </div>
+      <div class="indicator-card">
+        <h3>Taxa média de ocupação</h3>
+        <strong>${(averageOccupancy*100).toFixed(1)}%</strong>
+        <span class="tag muted">${data.occupancy && data.occupancy.length ? data.occupancy.length : 0} combinações unidade/perfil</span>
+      </div>
+      <div class="indicator-card">
+        <h3>Duração prevista média</h3>
+        <strong>${expected.averageHours.toFixed(1)} h</strong>
+        <span class="tag muted">${expected.samples || 0} registros com previsão</span>
+      </div>`;
+  }
+
+  if (occupancyEl) {
+    const occ = data.occupancy || [];
+    if (!occ.length) {
+      occupancyEl.innerHTML = '<div class="empty-state">Sem dados de ocupação para as unidades selecionadas.</div>';
+    } else {
+      const rows = occ.map(item=>`
+        <tr>
+          <td>${escapeHtml(item.unit)}</td>
+          <td>${escapeHtml(item.type === 'visitor' ? 'Visitantes' : 'Acompanhantes')}</td>
+          <td>${item.total}</td>
+          <td>${item.inUse}</td>
+          <td>${item.free}</td>
+          <td>${item.overdue}</td>
+          <td>${(item.occupancyRate*100).toFixed(1)}%</td>
+        </tr>`).join('');
+      occupancyEl.innerHTML = `<table><thead><tr><th>Unidade</th><th>Perfil</th><th>Total</th><th>Em uso</th><th>Livres</th><th>Vencidos</th><th>Ocupação</th></tr></thead><tbody>${rows}</tbody></table>`;
+    }
+  }
+
+  if (activityEl) {
+    const series = data.activity || [];
+    if (!series.length) {
+      activityEl.innerHTML = '<div class="empty-state">Sem movimentações no período.</div>';
+    } else {
+      const rows = series.map(day=>`
+        <tr>
+          <td>${escapeHtml(day.date)}</td>
+          <td>${day.entries}</td>
+          <td>${day.checkouts}</td>
+        </tr>`).join('');
+      activityEl.innerHTML = `<table><thead><tr><th>Dia</th><th>Entradas</th><th>Baixas</th></tr></thead><tbody>${rows}</tbody></table>`;
+    }
+  }
+
+  if (recentEl) {
+    const recent = data.recent || [];
+    if (!recent.length) {
+      recentEl.innerHTML = '<div class="empty-state">Sem movimentações recentes.</div>';
+    } else {
+      const items = recent.map(item=>`
+        <li><strong>${escapeHtml(item.timestampDisplay)}</strong> · ${escapeHtml(item.action || '')} · ${escapeHtml(item.type || '')} · ${escapeHtml(item.unit || '')}<br><small>${escapeHtml(item.visitorName || 'Visitante')} → ${escapeHtml(item.patientName || 'Paciente')} (${escapeHtml(item.locker || '-')})</small></li>`).join('');
+      recentEl.innerHTML = `<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;">${items}</ul>`;
+    }
+  }
+  playSound('insight');
 }
 
 function showAudit(){
@@ -1760,11 +2440,55 @@ function showAudit(){
   if (!content) return;
   state.activePage = 'audit';
   const titleEl = document.getElementById('viewTitle');
-  if (titleEl) titleEl.textContent = 'Auditoria';
-  content.innerHTML = `<div class="card"><div class="card-header"><h2>Auditoria</h2></div><div id="auditArea">Carregando...</div></div>`;
-  google.script.run.withSuccessHandler(rows=>{
-    document.getElementById('auditArea').innerHTML = renderTable(rows);
-  }).getAuditLog();
+  if (titleEl) titleEl.textContent = 'Auditoria e logs';
+  content.innerHTML = `
+    <div class="card">
+      <div class="card-header"><h2>Auditoria do sistema</h2></div>
+      <div class="card" style="margin:0 0 20px;">
+        <h3 style="margin-top:0">Logs detalhados</h3>
+        <div id="logsArea">Carregando...</div>
+      </div>
+      <div class="card" style="margin:0;">
+        <h3 style="margin-top:0">Registros de auditoria</h3>
+        <div id="auditArea">Carregando...</div>
+      </div>
+    </div>`;
+  google.script.run.withSuccessHandler(renderAuditTable).getAuditLog();
+  google.script.run.withSuccessHandler(renderLogsTable).getLogs(150);
+}
+
+function renderAuditTable(rows){
+  const area = document.getElementById('auditArea');
+  if (!area) return;
+  if (!rows || rows.length <= 1){
+    area.innerHTML = '<div class="empty-state">Nenhum evento de auditoria registrado.</div>';
+    return;
+  }
+  const head = rows[0].map(h=>`<th>${escapeHtml(h)}</th>`).join('');
+  const body = rows.slice(1).map(r=>`<tr>${r.map(v=>`<td>${escapeHtml(v instanceof Date ? formatDateTime(v) : (v||''))}</td>`).join('')}</tr>`).join('');
+  area.innerHTML = `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+function renderLogsTable(logs){
+  const area = document.getElementById('logsArea');
+  if (!area) return;
+  if (!Array.isArray(logs) || !logs.length){
+    area.innerHTML = '<div class="empty-state">Nenhuma alteração registrada até o momento.</div>';
+    return;
+  }
+  const body = logs.slice().reverse().map(log=>{
+    const ts = log.timestamp ? formatDateTime(log.timestamp) : '';
+    const meta = describeMetadata(log.metadata || {});
+    return `<tr>
+      <td>${escapeHtml(ts)}</td>
+      <td>${escapeHtml(log.user || '')}</td>
+      <td>${escapeHtml(log.entity || '')}</td>
+      <td>${escapeHtml(log.action || '')}</td>
+      <td>${escapeHtml(log.details || '')}</td>
+      <td>${meta}</td>
+    </tr>`;
+  }).join('');
+  area.innerHTML = `<table><thead><tr><th>Data</th><th>Usuário</th><th>Entidade</th><th>Ação</th><th>Detalhes</th><th>Meta</th></tr></thead><tbody>${body}</tbody></table>`;
 }
 </script>
 </body>
