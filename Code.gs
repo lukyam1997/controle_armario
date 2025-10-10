@@ -50,7 +50,13 @@ function safeSetup_() {
     ['NUM_ARMARIOS_VISITANTE_ROWS', 4],
     ['NUM_ARMARIOS_VISITANTE_COLS', 5],
   ];
-  defaults.forEach(([k,v])=>{ if (getSetting(k) === null) updateSetting(k, v); });
+  defaults.forEach(([k, v]) => {
+    const raw = getSetting(k);
+    const numeric = Number(raw);
+    if (raw === null || isNaN(numeric) || numeric < 1) {
+      updateSetting(k, v);
+    }
+  });
 
   // Gera planta se estiver vazia
   generateLockers('VisitorLockers', getSetting('NUM_ARMARIOS_VISITANTE'), '', getSetting('NUM_ARMARIOS_VISITANTE_ROWS'), getSetting('NUM_ARMARIOS_VISITANTE_COLS'));
@@ -394,11 +400,21 @@ function updateUserUnits(username, units) {
 
 /** ========= ARMÁRIOS ========= **/
 function getLockersData(type, unit='') {
+  Logger.log(`getLockersData: type=${type}, unit=${unit}`);
   const sheetName = resolveLockerSheet_(type, unit);
+  Logger.log(`getLockersData: resolvedSheet=${sheetName}`);
   const sheet = SS.getSheetByName(sheetName);
+  if (!sheet) {
+    Logger.log(`getLockersData: sheet ${sheetName} not found after resolution`);
+    throw new Error(`Sheet ${sheetName} não encontrada`);
+  }
   ensureLockerInventory_(sheet, type, unit);
+  const lastRow = sheet.getLastRow();
+  Logger.log(`getLockersData: lastRow=${lastRow}`);
   const data = sheet.getDataRange().getValues();
+  Logger.log(`getLockersData: dataLength=${data.length}`);
   const updated = recalcStatuses_(sheet, data, type);
+  Logger.log(`getLockersData: returning ${updated ? updated.length : 0} rows`);
   return updated;
 }
 
@@ -1031,12 +1047,23 @@ function resolveLockerSheet_(type, unit) {
 
 function ensureVisitorDefaults_(unit) {
   const key = formatUnitKey_(unit);
+  const resolveDefault = (settingKey, fallback) => {
+    const raw = getSetting(settingKey);
+    const numeric = Number(raw);
+    return raw === null || isNaN(numeric) || numeric < 1 ? fallback : numeric;
+  };
   const defaults = [
-    [`NUM_ARMARIOS_VISITOR_${key}`, getSetting('NUM_ARMARIOS_VISITANTE') || 20],
-    [`NUM_ARMARIOS_VISITOR_${key}_ROWS`, getSetting('NUM_ARMARIOS_VISITANTE_ROWS') || 4],
-    [`NUM_ARMARIOS_VISITOR_${key}_COLS`, getSetting('NUM_ARMARIOS_VISITANTE_COLS') || 5]
+    [`NUM_ARMARIOS_VISITOR_${key}`, resolveDefault('NUM_ARMARIOS_VISITANTE', 20)],
+    [`NUM_ARMARIOS_VISITOR_${key}_ROWS`, resolveDefault('NUM_ARMARIOS_VISITANTE_ROWS', 4)],
+    [`NUM_ARMARIOS_VISITOR_${key}_COLS`, resolveDefault('NUM_ARMARIOS_VISITANTE_COLS', 5)]
   ];
-  defaults.forEach(([k,v])=>{ if (getSetting(k) === null) updateSetting(k, v); });
+  defaults.forEach(([settingKey, value]) => {
+    const raw = getSetting(settingKey);
+    const numeric = Number(raw);
+    if (raw === null || isNaN(numeric) || numeric < 1) {
+      updateSetting(settingKey, value);
+    }
+  });
   return { name: unit, key };
 }
 
@@ -1061,14 +1088,31 @@ function ensureCompanionDefaults_(unit) {
     [`NUM_ARMARIOS_${key}_ROWS`, null],
     [`NUM_ARMARIOS_${key}_COLS`, null]
   ];
-  legacy.forEach(([k])=>{
-    const val = getSetting(k);
-    if (val !== null) {
-      const newKey = k.replace(`NUM_ARMARIOS_${key}`, `NUM_ARMARIOS_COMPANION_${key}`);
-      if (getSetting(newKey) === null) updateSetting(newKey, val);
+  legacy.forEach(([legacyKey]) => {
+    const legacyValue = getSetting(legacyKey);
+    if (legacyValue !== null) {
+      const newKey = legacyKey.replace(`NUM_ARMARIOS_${key}`, `NUM_ARMARIOS_COMPANION_${key}`);
+      const defaultsEntry = defaults.find(([candidate]) => candidate === newKey);
+      const fallback = defaultsEntry ? defaultsEntry[1] : null;
+      const numericLegacy = Number(legacyValue);
+      const currentRaw = getSetting(newKey);
+      const currentNumeric = Number(currentRaw);
+      const needsUpdate = currentRaw === null || isNaN(currentNumeric) || currentNumeric < 1;
+      if (!needsUpdate) return;
+      if (!isNaN(numericLegacy) && numericLegacy >= 1) {
+        updateSetting(newKey, numericLegacy);
+      } else if (fallback !== null) {
+        updateSetting(newKey, fallback);
+      }
     }
   });
-  defaults.forEach(([k,v])=>{ if (getSetting(k) === null) updateSetting(k, v); });
+  defaults.forEach(([settingKey, value]) => {
+    const raw = getSetting(settingKey);
+    const numeric = Number(raw);
+    if (raw === null || isNaN(numeric) || numeric < 1) {
+      updateSetting(settingKey, value);
+    }
+  });
   return { name: unit, key };
 }
 
