@@ -31,7 +31,7 @@ function safeSetup_() {
   ensureHeaders_('VisitorLockers', ['Number','Status','Visitor Name','Phone','Patient Name','Bed','Start Time','Stored Items','Expected End','Status Updated']);
   ensureHeaders_('VisitorRegistrations', ['Timestamp','VisitorName','Phone','PatientName','Bed','Locker','Action','Unit','Stored Items','Expected End']);
   ensureHeaders_('CompanionRegistrations', ['Timestamp','VisitorName','Phone','PatientName','Bed','Locker','Action','Unit','Stored Items','Expected End']);
-  ensureHeaders_('Users', ['Username','Password','Profile','Email']);
+  ensureHeaders_('Users', ['Username','Password','Profile','Email','Unit']);
   ensureHeaders_('AuditLog', ['Timestamp','User','Action','Details']);
   ensureHeaders_('Settings', ['Key','Value']);
 
@@ -51,7 +51,14 @@ function safeSetup_() {
 
   // Gera planta se estiver vazia
   generateLockers('VisitorLockers', getSetting('NUM_ARMARIOS_VISITANTE'), '', getSetting('NUM_ARMARIOS_VISITANTE_ROWS'), getSetting('NUM_ARMARIOS_VISITANTE_COLS'));
-  listUnits().forEach(unit => {
+  const activeUnits = listUnits();
+  activeUnits.forEach(unit => {
+    const visitorInfo = ensureVisitorDefaults_(unit.name);
+    const visitorSheet = getVisitorSheetName_(unit.name);
+    if (!SS.getSheetByName(visitorSheet)) SS.insertSheet(visitorSheet);
+    ensureHeaders_(visitorSheet, ['Number','Status','Visitor Name','Phone','Patient Name','Bed','Start Time','Stored Items','Expected End','Status Updated']);
+    generateLockers(visitorSheet, getSetting(`NUM_ARMARIOS_VISITOR_${visitorInfo.key}`), '', getSetting(`NUM_ARMARIOS_VISITOR_${visitorInfo.key}_ROWS`), getSetting(`NUM_ARMARIOS_VISITOR_${visitorInfo.key}_COLS`));
+
     ensureCompanionDefaults_(unit.name);
     const sheetName = getCompanionSheetName_(unit.name);
     if (!SS.getSheetByName(sheetName)) SS.insertSheet(sheetName);
@@ -62,7 +69,8 @@ function safeSetup_() {
   // Se não existir usuário, cria admin padrão (pode apagar depois)
   const usersSheet = SS.getSheetByName('Users');
   if (usersSheet.getLastRow() === 1) {
-    addUser('admin', 'admin', PROFILES.ADMIN, Session.getActiveUser().getEmail() || 'admin@example.com');
+    const defaultUnit = activeUnits.length ? activeUnits[0].name : '';
+    addUser('admin', 'admin', PROFILES.ADMIN, Session.getActiveUser().getEmail() || 'admin@example.com', defaultUnit);
   }
 }
 
@@ -107,7 +115,13 @@ function generateLockers(sheetName, count, prefix, rows, cols) {
 /** ========= SETTINGS ========= **/
 function setLockerConfig(type, rows, cols, unit='') {
   let sheetName, prefix, key;
-  if (type === 'visitor') { sheetName = 'VisitorLockers'; prefix = ''; key = 'NUM_ARMARIOS_VISITANTE'; }
+  if (type === 'visitor') {
+    if (!unit) return { success:false, message:'Unidade obrigatória' };
+    const info = ensureVisitorDefaults_(unit);
+    sheetName = getVisitorSheetName_(unit);
+    prefix = '';
+    key = `NUM_ARMARIOS_VISITOR_${info.key}`;
+  }
   else if (type === 'companion') {
     if (!unit) return { success:false, message:'Unidade obrigatória' };
     const companion = ensureCompanionDefaults_(unit);
@@ -120,7 +134,11 @@ function setLockerConfig(type, rows, cols, unit='') {
   if (!rowsN || !colsN) return { success:false, message:'Rows/Cols inválidos' };
 
   const count = rowsN * colsN;
-  const sheet = SS.getSheetByName(sheetName);
+  let sheet = SS.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = SS.insertSheet(sheetName);
+    ensureHeaders_(sheetName, ['Number','Status','Visitor Name','Phone','Patient Name','Bed','Start Time','Stored Items','Expected End','Status Updated']);
+  }
   const currentCount = sheet.getLastRow() - 1;
   if (count < currentCount) return { success:false, message:'Não é possível reduzir armários (existem registros).' };
 
@@ -134,7 +152,11 @@ function setLockerConfig(type, rows, cols, unit='') {
 
 function getLockerConfig(type, unit='') {
   let key;
-  if (type === 'visitor') key = 'NUM_ARMARIOS_VISITANTE';
+  if (type === 'visitor') {
+    if (!unit) return { rows:0, cols:0, count:0 };
+    const visitor = ensureVisitorDefaults_(unit);
+    key = `NUM_ARMARIOS_VISITOR_${visitor.key}`;
+  }
   else if (type === 'companion') {
     if (!unit) return { rows:0, cols:0, count:0 };
     const companion = ensureCompanionDefaults_(unit);
@@ -172,13 +194,13 @@ function getSettings() {
 function login(username, password) {
   try {
     const usersSheet = SS.getSheetByName('Users');
-    if (usersSheet.getLastRow() === 0) ensureHeaders_('Users', ['Username','Password','Profile','Email']);
+    if (usersSheet.getLastRow() === 0) ensureHeaders_('Users', ['Username','Password','Profile','Email','Unit']);
     const data = usersSheet.getDataRange().getValues();
     const hash = Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, password));
     for (let i=1; i<data.length; i++) {
       if (data[i][0] === username && data[i][1] === hash) {
         logAudit(username, 'Login', 'Usuário autenticado');
-        return { success:true, profile:data[i][2], username, email: data[i][3] || '' };
+        return { success:true, profile:data[i][2], username, email: data[i][3] || '', unit: data[i][4] || '' };
       }
     }
     return { success:false, message:'Credenciais inválidas' };
@@ -187,12 +209,12 @@ function login(username, password) {
   }
 }
 
-function addUser(username, password, profile, email) {
+function addUser(username, password, profile, email, unit) {
   const sh = SS.getSheetByName('Users');
   const data = sh.getDataRange().getValues();
   for (let i=1; i<data.length; i++) if (data[i][0] === username) return { success:false, message:'Usuário já existe' };
   const hash = Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, password));
-  sh.appendRow([username, hash, profile, email]);
+  sh.appendRow([username, hash, profile, email, unit || '']);
   logAudit('Admin','Add User', username);
   return { success:true };
 }
@@ -344,11 +366,19 @@ function addUnit(unit, display) {
   if (!unit) return { success:false, message:'Nome obrigatório' };
   const sh = SS.getSheetByName('Units');
   const normalized = unit.trim();
+  const unitKey = formatUnitKey_(normalized);
   const data = sh.getDataRange().getValues();
   for (let i=1; i<data.length; i++) {
     if (String(data[i][0]).toLowerCase() === normalized.toLowerCase()) {
       sh.getRange(i+1,2).setValue(display || normalized);
       sh.getRange(i+1,3).setValue(true);
+      ensureVisitorDefaults_(normalized);
+      const visitorSheet = getVisitorSheetName_(normalized);
+      if (!SS.getSheetByName(visitorSheet)) {
+        SS.insertSheet(visitorSheet);
+        ensureHeaders_(visitorSheet, ['Number','Status','Visitor Name','Phone','Patient Name','Bed','Start Time','Stored Items','Expected End','Status Updated']);
+      }
+      generateLockers(visitorSheet, getSetting(`NUM_ARMARIOS_VISITOR_${unitKey}`), '', getSetting(`NUM_ARMARIOS_VISITOR_${unitKey}_ROWS`), getSetting(`NUM_ARMARIOS_VISITOR_${unitKey}_COLS`));
       ensureCompanionDefaults_(normalized);
       const sheetName = getCompanionSheetName_(normalized);
       if (!SS.getSheetByName(sheetName)) {
@@ -359,13 +389,20 @@ function addUnit(unit, display) {
     }
   }
   sh.appendRow([normalized, display || normalized, true]);
+  ensureVisitorDefaults_(normalized);
+  const visitorSheet = getVisitorSheetName_(normalized);
+  if (!SS.getSheetByName(visitorSheet)) {
+    SS.insertSheet(visitorSheet);
+    ensureHeaders_(visitorSheet, ['Number','Status','Visitor Name','Phone','Patient Name','Bed','Start Time','Stored Items','Expected End','Status Updated']);
+  }
+  generateLockers(visitorSheet, getSetting(`NUM_ARMARIOS_VISITOR_${unitKey}`), '', getSetting(`NUM_ARMARIOS_VISITOR_${unitKey}_ROWS`), getSetting(`NUM_ARMARIOS_VISITOR_${unitKey}_COLS`));
   ensureCompanionDefaults_(normalized);
   const sheetName = getCompanionSheetName_(normalized);
   if (!SS.getSheetByName(sheetName)) {
     SS.insertSheet(sheetName);
     ensureHeaders_(sheetName, ['Number','Status','Visitor Name','Phone','Patient Name','Bed','Start Time','Stored Items','Expected End','Status Updated']);
   }
-  generateLockers(sheetName, getSetting(`NUM_ARMARIOS_COMPANION_${formatUnitKey_(normalized)}`), formatUnitKey_(normalized), getSetting(`NUM_ARMARIOS_COMPANION_${formatUnitKey_(normalized)}_ROWS`), getSetting(`NUM_ARMARIOS_COMPANION_${formatUnitKey_(normalized)}_COLS`));
+  generateLockers(sheetName, getSetting(`NUM_ARMARIOS_COMPANION_${unitKey}`), unitKey, getSetting(`NUM_ARMARIOS_COMPANION_${unitKey}_ROWS`), getSetting(`NUM_ARMARIOS_COMPANION_${unitKey}_COLS`));
   return { success:true };
 }
 
@@ -389,7 +426,17 @@ function include(filename) {
 
 /** ========= HELPERS ========= **/
 function resolveLockerSheet_(type, unit) {
-  if (type === 'visitor') return 'VisitorLockers';
+  if (type === 'visitor') {
+    if (!unit) throw new Error('Unidade obrigatória');
+    const info = ensureVisitorDefaults_(unit);
+    const sheetName = getVisitorSheetName_(unit);
+    if (!SS.getSheetByName(sheetName)) {
+      SS.insertSheet(sheetName);
+      ensureHeaders_(sheetName, ['Number','Status','Visitor Name','Phone','Patient Name','Bed','Start Time','Stored Items','Expected End','Status Updated']);
+      generateLockers(sheetName, getSetting(`NUM_ARMARIOS_VISITOR_${info.key}`), '', getSetting(`NUM_ARMARIOS_VISITOR_${info.key}_ROWS`), getSetting(`NUM_ARMARIOS_VISITOR_${info.key}_COLS`));
+    }
+    return sheetName;
+  }
   if (type === 'companion') {
     if (!unit) throw new Error('Unidade obrigatória');
     const info = ensureCompanionDefaults_(unit);
@@ -402,6 +449,26 @@ function resolveLockerSheet_(type, unit) {
     return sheetName;
   }
   throw new Error('Tipo inválido');
+}
+
+function ensureVisitorDefaults_(unit) {
+  const key = formatUnitKey_(unit);
+  const defaults = [
+    [`NUM_ARMARIOS_VISITOR_${key}`, getSetting('NUM_ARMARIOS_VISITANTE') || 20],
+    [`NUM_ARMARIOS_VISITOR_${key}_ROWS`, getSetting('NUM_ARMARIOS_VISITANTE_ROWS') || 4],
+    [`NUM_ARMARIOS_VISITOR_${key}_COLS`, getSetting('NUM_ARMARIOS_VISITANTE_COLS') || 5]
+  ];
+  defaults.forEach(([k,v])=>{ if (getSetting(k) === null) updateSetting(k, v); });
+  return { name: unit, key };
+}
+
+function getVisitorSheetName_(unit) {
+  const key = formatUnitKey_(unit);
+  const modern = `VisitorLockers_${key}`;
+  const legacy = `VisitorLockers${key}`;
+  if (SS.getSheetByName(modern)) return modern;
+  if (SS.getSheetByName(legacy)) return legacy;
+  return modern;
 }
 
 function ensureCompanionDefaults_(unit) {
